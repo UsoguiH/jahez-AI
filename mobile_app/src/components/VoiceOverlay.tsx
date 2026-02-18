@@ -691,7 +691,7 @@ ${menuText}
             <View className="flex-1 bg-white">
                 {/* Header */}
                 <SafeAreaView className="bg-white">
-                    <View className="flex-row justify-between items-center px-6 py-4">
+                    <View className="flex-row justify-between items-center px-6 pt-8 pb-4">
                         <TouchableOpacity onPress={handleCloseOverlay} className="w-10 h-10 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
                             <Ionicons name="close" size={24} color="black" />
                         </TouchableOpacity>
@@ -807,9 +807,9 @@ ${menuText}
                                         <Text
                                             style={{
                                                 color: msg.role === 'user' ? '#FFFFFF' : '#991B1B',
-                                                fontSize: 15,
+                                                fontSize: 17,
                                                 textAlign: 'right',
-                                                lineHeight: 22,
+                                                lineHeight: 26,
                                             }}
                                         >
                                             {msg.text}
@@ -853,7 +853,7 @@ ${menuText}
                             </ScrollView>
 
                             {/* Quick Suggestion Chips */}
-                            <View className="w-full px-2 pb-4">
+                            <View className="w-full px-2 pb-2 mb-10">
                                 <View className="flex-row flex-wrap justify-center gap-2">
                                     <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
                                         <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
