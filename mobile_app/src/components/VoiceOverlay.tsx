@@ -8,7 +8,7 @@ import { Buffer } from 'buffer';
 
 import { supabase } from '../lib/supabase';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import OrderCartWidget, { CartItem } from './OrderCartWidget';
+import { InlineCartCard, MiniCartBar, CartItem } from './OrderCartWidget';
 
 // Polyfill for global
 if (!global.btoa) { global.btoa = btoa; }
@@ -33,7 +33,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
     const [isConnected, setIsConnected] = useState(false);
     const [status, setStatus] = useState('Idle');
     const [transcript, setTranscript] = useState('');
-    const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
+    const [messages, setMessages] = useState<{ role: 'user' | 'ai' | 'cart', text: string, cartItems?: CartItem[] }[]>([]);
     const [currentAiText, setCurrentAiText] = useState('');
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -582,16 +582,25 @@ ${menuText}
         };
     };
 
-    // Handle update_cart — updates the visual cart widget
+    // Handle update_cart — injects/updates cart as an inline chat message
     const handleUpdateCart = (args: { items: CartItem[] }) => {
         console.log(`[TOOL] update_cart: ${args.items.length} items`, args.items);
-        setCartItems(args.items || []);
-        const subtotal = (args.items || []).reduce((sum: number, item: CartItem) => sum + (item.unit_price * item.quantity), 0);
+        const newItems = args.items || [];
+        setCartItems(newItems);
+
+        // Add or update cart message in chat
+        setMessages(prev => {
+            // Remove any existing cart messages and add new one at the end
+            const filtered = prev.filter(m => m.role !== 'cart');
+            return [...filtered, { role: 'cart' as const, text: '', cartItems: newItems }];
+        });
+
+        const subtotal = newItems.reduce((sum: number, item: CartItem) => sum + (item.unit_price * item.quantity), 0);
         return {
             success: true,
-            items_count: args.items.length,
+            items_count: newItems.length,
             subtotal: subtotal,
-            message: `تم تحديث السلة. ${args.items.length} صنف، المجموع الفرعي: ${subtotal} ريال`
+            message: `تم تحديث السلة. ${newItems.length} صنف، المجموع الفرعي: ${subtotal} ريال`
         };
     };
 
@@ -750,6 +759,23 @@ ${menuText}
                     </View>
                 </SafeAreaView>
 
+                {/* Pinned Mini Cart Summary Bar */}
+                {cartItems.length > 0 && (
+                    <MiniCartBar
+                        items={cartItems}
+                        restaurantName={selectedRestaurantRef.current?.name_ar}
+                        onConfirm={() => {
+                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                                ws.current.send(JSON.stringify({
+                                    type: 'conversation.item.create',
+                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أكد الطلب' }] }
+                                }));
+                                ws.current.send(JSON.stringify({ type: 'response.create' }));
+                            }
+                        }}
+                    />
+                )}
+
                 {/* Content */}
                 <View className="flex-1 justify-center items-center px-6 relative">
 
@@ -836,11 +862,11 @@ ${menuText}
                             <ScrollView
                                 ref={scrollViewRef}
                                 className="flex-1 w-full px-2 mb-4"
-                                contentContainerStyle={{ paddingBottom: cartItems.length > 0 ? 320 : 10 }}
+                                contentContainerStyle={{ paddingBottom: 10 }}
                                 onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                                 showsVerticalScrollIndicator={false}
                             >
-                                {messages.map((msg, idx) => (
+                                {messages.filter(m => m.role !== 'cart').map((msg, idx) => (
                                     <View
                                         key={idx}
                                         style={{
@@ -901,58 +927,39 @@ ${menuText}
                                         </Text>
                                     </View>
                                 ) : null}
+
+                                {/* Inline Cart Cards */}
+                                {messages.filter(m => m.role === 'cart').length > 0 && (() => {
+                                    const cartMsg = messages.filter(m => m.role === 'cart').pop();
+                                    return cartMsg?.cartItems && cartMsg.cartItems.length > 0 ? (
+                                        <InlineCartCard
+                                            items={cartMsg.cartItems}
+                                            restaurantName={selectedRestaurantRef.current?.name_ar}
+                                        />
+                                    ) : null;
+                                })()}
                             </ScrollView>
 
-                            {/* Quick Suggestion Chips — hide when cart is visible */}
-                            {cartItems.length === 0 && (
-                                <View className="w-full px-2 pb-2 mb-10">
-                                    <View className="flex-row flex-wrap justify-center gap-2">
-                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                            <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
-                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">وش عندكم؟</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                            <MaterialIcons name="check-circle" size={16} color="#DC2626" />
-                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">أكّد الطلب</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                            <MaterialIcons name="swap-horiz" size={16} color="#DC2626" />
-                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">غيّر المطعم</Text>
-                                        </TouchableOpacity>
-                                    </View>
+                            {/* Quick Suggestion Chips */}
+                            <View className="w-full px-2 pb-2 mb-10">
+                                <View className="flex-row flex-wrap justify-center gap-2">
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">وش عندكم؟</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="check-circle" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">أكّد الطلب</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="swap-horiz" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">غيّر المطعم</Text>
+                                    </TouchableOpacity>
                                 </View>
-                            )}
+                            </View>
                         </>
                     )}
                 </View>
-
-                {/* Order Cart Widget — slides up when items are added */}
-                {isListening && cartItems.length > 0 && (
-                    <OrderCartWidget
-                        items={cartItems}
-                        restaurantName={selectedRestaurantRef.current?.name_ar}
-                        onConfirm={() => {
-                            // Trigger confirm via voice — tell AI to confirm
-                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                                ws.current.send(JSON.stringify({
-                                    type: 'conversation.item.create',
-                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أكد الطلب' }] }
-                                }));
-                                ws.current.send(JSON.stringify({ type: 'response.create' }));
-                            }
-                        }}
-                        onEdit={() => {
-                            // Trigger edit via voice
-                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                                ws.current.send(JSON.stringify({
-                                    type: 'conversation.item.create',
-                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أبي أعدّل الطلب' }] }
-                                }));
-                                ws.current.send(JSON.stringify({ type: 'response.create' }));
-                            }
-                        }}
-                    />
-                )}
             </View>
         </Modal>
     );
