@@ -9,6 +9,7 @@ import { Buffer } from 'buffer';
 import { supabase } from '../lib/supabase';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import OrderCartWidget, { CartItem } from './OrderCartWidget';
+import OrderConfirmation from './OrderConfirmation';
 
 // Polyfill for global
 if (!global.btoa) { global.btoa = btoa; }
@@ -37,6 +38,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
     const [currentAiText, setCurrentAiText] = useState('');
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [orderConfirmed, setOrderConfirmed] = useState(false);
+    const [orderDetails, setOrderDetails] = useState<{ summary: string; total: number } | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
     const ws = useRef<WebSocket | null>(null);
     const recording = useRef<Audio.Recording | null>(null);
@@ -105,6 +107,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             selectedRestaurantRef.current = null;
             setCartItems([]);
             setOrderConfirmed(false);
+            setOrderDetails(null);
         }
     }, [visible]);
 
@@ -599,6 +602,7 @@ ${menuText}
     const handleConfirmOrder = (args: { order_summary: string; total_price: number }) => {
         console.log(`[TOOL] confirm_order:`, args);
         setOrderConfirmed(true);
+        setOrderDetails({ summary: args.order_summary, total: args.total_price });
         return {
             success: true,
             order_id: `ORD-${Date.now()}`,
@@ -739,6 +743,21 @@ ${menuText}
             onRequestClose={handleCloseOverlay}
         >
             <View className="flex-1 bg-white">
+                {/* Order Confirmation Overlay */}
+                {orderConfirmed && (
+                    <OrderConfirmation
+                        items={cartItems}
+                        totalPrice={orderDetails?.total}
+                        restaurantName={selectedRestaurantRef.current?.name_ar}
+                        onClose={() => {
+                            setOrderConfirmed(false);
+                            setOrderDetails(null);
+                            setCartItems([]);
+                            handleCloseOverlay();
+                        }}
+                    />
+                )}
+
                 {/* Header */}
                 <SafeAreaView className="bg-white">
                     <View className="flex-row justify-between items-center px-6 pt-8 pb-4">
