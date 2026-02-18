@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Saldivia Menu Clone</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF0000", // Red color from "Add to Cart" button
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#18181b",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#27272a",
+                        "text-primary-light": "#111827",
+                        "text-primary-dark": "#f4f4f5",
+                        "text-secondary-light": "#6B7280",
+                        "text-secondary-dark": "#a1a1aa",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#3f3f46",
+                    },
+                    fontFamily: {
+                        display: ["Tajawal", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'xl': '1rem',
+                        '2xl': '1.5rem',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark pb-24 transition-colors duration-200">
+<div class="relative w-full h-48 bg-[#FFF8E1] dark:bg-amber-900/20 overflow-hidden">
+<div class="absolute inset-0 opacity-10 dark:opacity-5" style="background-image: radial-gradient(#F59E0B 1px, transparent 1px); background-size: 20px 20px;"></div>
+<div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 pt-12">
+<div class="flex gap-3">
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 transition">
+<span class="material-icons-outlined text-xl">ios_share</span>
+</button>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 transition">
+<span class="material-icons-outlined text-xl">favorite_border</span>
+</button>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 transition">
+<span class="material-icons-outlined text-xl">search</span>
+</button>
+</div>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 transition">
+<span class="material-icons-outlined text-xl">chevron_right</span> 
+</button>
+</div>
+</div>
+<div class="relative px-4 -mt-16 z-20">
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-soft p-5 text-center transition-colors duration-200">
+<div class="absolute -top-10 left-1/2 transform -translate-x-1/2">
+<div class="w-20 h-20 bg-white dark:bg-surface-dark rounded-2xl shadow-md p-1 flex items-center justify-center border border-gray-100 dark:border-border-dark">
+<img alt="Restaurant Logo" class="w-16 h-16 object-contain rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBL7PF6lzAVcbHGENjW_dHsCfN7BHD23aQtm-Jeh5uw-zU9aeB9KcA6d0210yMvRhx9zXxZvzCANtXwdopkI78Mz5Cnac9br6PD9eujeo8k8NDEiAEvmZI7OFUZDpIxLm_Ot9pPk6bJEZHssCEmpAVet4qt9UDn9jckDascaJNLjt7ID5QXfHeaC7j9TrVkuooKdk_iwHMZCbUNlZBAr_Ia8GhMgsi4kTkB0u3Fsc-EjmSOOmnMQhYMiV6frsgNeyw-JUF-Xa9Nfwmu"/>
+</div>
+</div>
+<div class="mt-10">
+<h1 class="text-xl font-bold flex items-center justify-center gap-2">
+                    سالدوتش -Saldwich 🌶️ جرب هوت شوت
+                </h1>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm mt-1">صحي، سلطات</p>
+</div>
+<div class="mt-6 flex justify-between items-center text-center divide-x divide-x-reverse divide-gray-100 dark:divide-gray-700">
+<div class="flex-1 px-1">
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-1">المسافة</p>
+<p class="font-bold text-sm">1.0 كم</p>
+</div>
+<div class="flex-1 px-1">
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-1">يغلق عند</p>
+<p class="font-bold text-sm">AM 2:00</p>
+</div>
+<div class="flex-1 px-1">
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-1">الحد الادنى للطلب</p>
+<p class="font-bold text-sm">15.00 <span class="text-xs font-normal">ر.س</span></p>
+</div>
+<div class="flex-1 px-1">
+<div class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs px-2 py-1 rounded-md inline-block font-semibold">
+                        تمارا
+                    </div>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark mt-1">متاح</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sticky top-0 z-30 bg-background-light dark:bg-background-dark pt-4 pb-2 px-4 shadow-sm transition-colors duration-200">
+<div class="flex justify-between items-center mb-4">
+<div class="flex gap-2">
+<button class="w-10 h-10 bg-gray-100 dark:bg-surface-dark rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300">
+<span class="material-icons-outlined">tune</span>
+</button>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300">
+<span class="material-icons-outlined">search</span>
+</button>
+</div>
+<h2 class="text-xl font-bold">المنتجات</h2>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+<button class="w-10 h-10 flex-shrink-0 bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-300">
+<span class="material-icons-outlined text-lg">description</span>
+</button>
+<div class="w-[1px] h-8 bg-gray-300 dark:bg-border-dark self-center mx-1"></div>
+<button class="bg-black dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg">
+                هوت شوت
+            </button>
+<button class="bg-gray-100 dark:bg-surface-dark text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                كرنش بنش
+            </button>
+<button class="bg-gray-100 dark:bg-surface-dark text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                بريميومز
+            </button>
+</div>
+</div>
+<div class="px-4 py-2 space-y-8 mt-2">
+<div>
+<h3 class="text-lg font-bold mb-4 text-right">هوت شوت</h3>
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-0 flex overflow-hidden hover:shadow-md transition-shadow duration-200 group cursor-pointer border border-transparent dark:border-border-dark">
+<div class="w-32 h-32 flex-shrink-0 bg-gray-100 dark:bg-gray-800 relative">
+<img alt="Hot Shot Sandwich Meal" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGXEIq0dFMk0dO0cJcFlPMBudbmK7L9WNzm-o_hnMD719VRNjuOOnH0wTHVi3JvTweUSjgs2khJi3g9HuZDxHVx3fl4FK3ZJ1rEmcnoWROQ1X0exsK8l6_zOE4vQ5kVoCjKRV5HIP0TVhG6Are3eHWkWMOJ1S1mQB8lqK6l52XEy_V4XnirJehWFLcM1psNpqCBs9CDat51etjzEZC4vKzLx4TrSmeuYrdB4Q0mN3wuC-QNY8jrljK96kwf7QRi88EwhOnDojHG7Q8"/>
+</div>
+<div class="flex-1 p-3 flex flex-col justify-between">
+<div>
+<h4 class="font-bold text-base mb-1">هوت شوت</h4>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark leading-relaxed line-clamp-2">
+                            ساندوتش صدور دجاج سبايسي + سلطة أوكرنشي سبايسي + تشيبس كاجن
+                        </p>
+</div>
+<div class="flex justify-end items-center mt-2">
+<span class="font-bold text-base">46.00 <span class="text-xs font-normal">ر.س</span></span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-bold mb-4 text-right">كرنش بنش</h3>
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-0 flex overflow-hidden hover:shadow-md transition-shadow duration-200 group cursor-pointer border border-transparent dark:border-border-dark">
+<div class="w-32 h-32 flex-shrink-0 bg-gray-100 dark:bg-gray-800 relative">
+<img alt="Crunchy Salmon Salad" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpwNSbMkxn_AnLmvV-PUh7gZlIprdp69LJL6FXmJKEzmswf3d3jiorZmaSpNn8XU3_psSJ90hMpJqa0m0sAnB_Ejs8HWPUUMhXMzq30kvrK1XEMuNAejI2uX5t4Ib71wHOVwRmbN8h-mO1q6HQ7gQObxZ9Z9yN-OxEdrdnv5avLbbLQLSHPZb3XfIIRETC8x4uuX4gdfyAdDtPA5zJojeeD6P1kV-dtg_gVxc3AKuXff_m3scqKW8Lehp5wufPcDZ6_oQwbPYTRw-r"/>
+</div>
+<div class="flex-1 p-3 flex flex-col justify-between">
+<div>
+<h4 class="font-bold text-base mb-1">كرانشيلي - سلمون</h4>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark leading-relaxed line-clamp-2">
+                            سلمون مكرمل، الخس الأيسبرغ المقرمش، أوراق الجرجير الصغيرة، الخس الأحمر والأخضر، رمان مجف...
+                        </p>
+</div>
+<div class="flex justify-end items-center mt-2">
+<span class="font-bold text-base">44.00 <span class="text-xs font-normal">ر.س</span></span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-2xl p-0 flex overflow-hidden hover:shadow-md transition-shadow duration-200 group cursor-pointer border border-transparent dark:border-border-dark mt-4">
+<div class="w-32 h-32 flex-shrink-0 bg-gray-100 dark:bg-gray-800 relative">
+<img alt="Burger Meal" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn0CPMPrlqZh7Xy1lYs_SktjwAYMAlBEILPvfHdrRYAUoc2f9QT3uoe73y5OACRLS2mJkKcbzY3tRZd0H_5ZEpbRsMz9zKiYfkMg_3g8JFbNxuH1IQ1Be1tGBJS4RzTlketS_7LAU1ZRqabsQQF8V5kmVVDWxXjaZwiENLdRBYJ8sJwYRMuCOigV73J0b6AmTtBBOw9i-kMY_Wn27MH2vB4bmpPV69---y8f2EC84YE-k0ZK4JEu9zqjVs5Q956z-r6riR4PNaH1Wj"/>
+</div>
+<div class="flex-1 p-3 flex flex-col justify-between">
+<div>
+<h4 class="font-bold text-base mb-1">بيف برجر كلاسيك</h4>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark leading-relaxed line-clamp-2">
+                            شريحة لحم بقري مشوي، جبنة شيدر، خس، طماطم، بصل، مخلل، صوص خاص
+                        </p>
+</div>
+<div class="flex justify-end items-center mt-2">
+<span class="font-bold text-base">38.00 <span class="text-xs font-normal">ر.س</span></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark px-6 py-3 flex justify-between items-center z-40 text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark pb-6">
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-icons-round text-2xl">home</span>
+<span>الرئيسية</span>
+</div>
+<div class="flex flex-col items-center gap-1 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">explore</span>
+<span>اكسبلور</span>
+</div>
+<div class="flex flex-col items-center gap-1 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">receipt_long</span>
+<span>طلباتي</span>
+</div>
+<div class="flex flex-col items-center gap-1 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">chat_bubble_outline</span>
+<span>فواصل</span>
+</div>
+<div class="flex flex-col items-center gap-1 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-2xl">more_horiz</span>
+<span>المزيد</span>
+</div>
+</div>
+
+</body></html>

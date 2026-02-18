@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Food Delivery Home Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF0000", // Red color from the "Add to cart" button and promotions
+                        "primary-dark": "#D60000",
+                        "background-light": "#F9FAFB",
+                        "background-dark": "#121212",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E1E1E",
+                        "subtle-gray": "#F3F4F6",
+                        "subtle-gray-dark": "#2C2C2C",
+                    },
+                    fontFamily: {
+                        display: ["Tajawal", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 min-h-screen pb-20">
+<div class="bg-gradient-to-b from-[#FFF0E6] to-background-light dark:from-[#2A1C1C] dark:to-background-dark pt-4 pb-4 px-4 rounded-b-3xl">
+<div class="flex justify-between items-center mb-4">
+<div class="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+<span class="material-icons-round text-lg">expand_more</span>
+<span class="font-bold text-lg dir-ltr">966555446622</span>
+</div>
+<div class="p-2 bg-white/50 dark:bg-black/20 rounded-full">
+<span class="material-icons-round text-gray-700 dark:text-gray-200">location_on</span>
+</div>
+</div>
+<div class="relative mb-6 shadow-sm">
+<input class="w-full py-3 pr-12 pl-4 rounded-xl border-none bg-white dark:bg-surface-dark text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-primary shadow-soft outline-none" placeholder="ابحث في Jahez" type="text"/>
+<span class="material-icons-round absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-2xl">search</span>
+</div>
+<div class="grid grid-cols-4 gap-2 text-center">
+<div class="flex flex-col items-center gap-2">
+<div class="bg-white dark:bg-surface-dark p-2 rounded-2xl shadow-md w-full aspect-square flex items-center justify-center relative transform scale-105 border-2 border-transparent dark:border-gray-700">
+<img alt="Restaurants" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-iE7o0flruxGudzhE1Q9pgWai7_yYuWaHxSMnNyzppcgqJB592XI-7le3Yrq12lOzj0Cf78wrSgcjhi84L_nlN5ipoDsTz7uvooxBtV3Gom0r8RpeqdETU81wxhJc01ywMoh_XjJFXOVPUt8ZmFUvMrm3a5R4-PgGj1zUCcX0BGr8PJNPrVkw81wJ1AA5oSZF2vW-aUPyAa0_-aqxjslBEJLjvdaA27hyFe_UY9P7qJbe0d1-keNb32Uuv-Gq5ZGuGPr1GTCusJMy"/>
+</div>
+<span class="text-xs font-bold text-gray-800 dark:text-white">مطاعم</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-80">
+<div class="p-2 rounded-2xl w-full aspect-square flex items-center justify-center">
+<img alt="Market" class="w-10 h-10 object-contain drop-shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ1w4Zp0nuZpCH2dcxkSHVnchSB7HB7ev16mM23zfilfGLLEmkstbPdJwN66VxssC07AstBpzZ2Y9QAdP2IZ3fDjuxvYRWMwE_Lj8gd7XP6wQs_QJ2qo0GxLWHegYOeN8ReoqLmUM-5m-Bt7OO01Wnz5HCMcpF5OopXFpfAPdNq-1rmZ6K1nPim8fUTSv7yvbsX_6msYo79v__404d2XRWHSRAdk4PNBtKbZ2A_85RX4P2Uiv1LGQSxEQdJGwo8RCSFBUOq1F1J8Z6"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">ماركت</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-80">
+<div class="p-2 rounded-2xl w-full aspect-square flex items-center justify-center">
+<img alt="Stores" class="w-10 h-10 object-contain drop-shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDflJVHQNOnIANAHdobe3kt7uYIYHWz5DgXmGx9M2vDxE5NtDBGxrIUO9P2T_SFDWy3aBW-3-zcwQVrzDZq1wQiGBpMZQHwFN1i0aPCdfaakXixQALTG0rG57o5TmFVwAfJLyH2xerNVWce2T4DyvnmoZFiRH3V0McBPXqmcUv_VcbCJhWqI1_RbDx0SSqqouNjOBbD8-H_9RO6mxs4RuGKWvML-4LtrHTxNpxoeunFlc1FT4eISos_ObACHQR5tNmNLJUmba12vZdF"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">متاجر</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-80">
+<div class="p-2 rounded-2xl w-full aspect-square flex items-center justify-center">
+<div class="bg-red-700 text-white font-black text-[10px] w-10 h-8 flex flex-col items-center justify-center rounded leading-tight shadow-sm">
+<span>15</span>
+<span class="text-[6px] uppercase tracking-tighter">MINUTES</span>
+</div>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">نون مينتس</span>
+</div>
+</div>
+</div>
+<div class="mx-4 mt-2 bg-[#FFF8E1] dark:bg-yellow-900/30 border border-[#FFE082] dark:border-yellow-700 rounded-lg p-3 flex items-center justify-between">
+<div class="flex items-center gap-2 text-[#F57F17] dark:text-yellow-500 text-xs font-medium">
+<span class="material-icons-round text-base">verified</span>
+<span>انتهى اشتراك برايم الخاص بك، جدد اشتراكك</span>
+</div>
+<span class="material-icons-round text-gray-400 dark:text-gray-500 text-lg">close</span>
+</div>
+<div class="mt-6">
+<div class="flex overflow-x-auto hide-scrollbar px-4 gap-4 pb-4">
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center overflow-hidden">
+<img alt="Groceries" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtg4l4rMQXtriMhwpTnOwu300RvbObU4MBYWp5IOF8b13so2Zt7bpnLA1XpbcHPwhwKvl-XC0vktxfi1So8TQU8RK1qM3S9kbEo8yh6O70CmwfZcTYyD45v93aNtDf6hrWekTGoCyN7lufRc5AXdq7lW5h4Z6AwY4eSQzR1CDBLDmYd_6zsenxuwjq5xeuda6xfCfaYoC8f61kE8jgFFNUEsEglWO1X55W1rn5z-bas7EGLn-9Or1sYB5f5m-wzAoP8QgUPX7uJntl"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">مقاضي رم...</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center overflow-hidden">
+<img alt="Frozen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBT28We7FjcFkqA7AVj_stm8nHnINzoXCxxwC5qPBoaKHEx4_w5pgTDJBoxcvGBDJ-IXxgW3AUDMzR80101YPFJ4bQrwEAvTPcoZbZxuraKH4CvdhYqWY4W3viEfbKFH4U8ttqttlDyC59cKqpgDa43TDgIcCqNkvoI2piASaXDJubpCVD8wVkoVzVpihRlZhlh7bkzqrc6Q2oHGK0qbhj3twU-qV1QgZKgiJ6do1MQc5Z_A0Fu2BxuOF9pB3ZK1CVRbf9cSplZk7tB"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">مفرزنات</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center overflow-hidden">
+<img alt="Desserts" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYvpe7YpnADajdvctqZzHcyFBuBGrZBmJZxJ7Cxz16aLhWr4OYytVCyuJxCwAOViSfeYbtdZpIgwtUDvM3JxMydLeGjQ7hwq_HyUiSUx-IkV_dte4bMKIsHBML0Z7VFBnZii2t_3hFg-h02eSR2tcifHbKzSoAoLN6RqcCLYidRl4inBv72VhvBqWPeyOvxv5EwFLmgHGOxqClgEE2420kunZuTChD4vNcPB8YPY7-A6wgbeSBHvz1g8EUEnl9JPUmP9kFcRZatmkx"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">الحلويات</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center overflow-hidden">
+<img alt="Saudi" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdl42MzWGilw5-BIOrEGJxZQsD4Dsi-xK3k6Qgu2LPcFkCrmVERIliRD4nxTkSaJEQfYHeEHCPDc3rHfHOUg4yk6DKTbUrl-ZRyaKQZtEd7s2GaWfEXy2mpUPjNj9R2Y7A-52XhLGPWpulCD6y_AGTOrqEtQQE3jXl4z1iEm1g_dinIi7cHn63DKxZlmLNH0iVjyBHYxacme0hkfG6IvPkfQ3duRGntXsGLQ9mZxXj-klxL4-DM_PkczzHOaNwj1JHBn14eQYOVwSE"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">سعودي</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center overflow-hidden">
+<img alt="Egyptian" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoy-6-mj9pNR8cKiwIan3leT_AgcQg2ylIu4-kTqwOHX7RhQ1StebZ0fC0pxv1Jecvphmn6nIJNIrnaT_MWzkEVOmWl2XN4I6eh1Z7T-ptY6fbgP_BdJPoExijOzrU6FUlb__KuTxcIa56kDRNhDwBzxFhHAGbgqfvh1a5QNPkRVBr-V6ohNBYQLpLyT48EaFomL-8TRcIrTjVRT8vxZDICnLJU2oX8SdfKope07MnFlX2YAHiEGOmARDVQzZ90709TOINMk8725zc"/>
+</div>
+<span class="text-xs font-medium text-gray-700 dark:text-gray-300">مصري</span>
+</div>
+</div>
+</div>
+<div class="mx-4 mt-2 mb-6">
+<div class="w-full bg-gradient-to-r from-red-800 to-red-600 rounded-2xl overflow-hidden shadow-lg relative h-40 flex items-center justify-center">
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIgc3Ryb2tlLXdpZHRoPSIxIj48cGF0aCBkPSJNMCA0MEw0MCAwSDIwTDAgMjBaIi8+PC9zdmc+')] opacity-20"></div>
+<div class="text-center text-white z-10 p-4">
+<h2 class="text-3xl font-black mb-1 drop-shadow-md">عروض التوصيل</h2>
+<p class="text-lg font-medium opacity-90">برايم + عروض توصيل حصرية</p>
+</div>
+</div>
+</div>
+<div class="px-4 mb-4">
+<div class="flex overflow-x-auto hide-scrollbar gap-4 items-start">
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-green-500 shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700 p-1">
+<span class="text-white text-[10px] font-bold text-center leading-3">جاهز<br/>للخير</span>
+</div>
+<span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center">جاهز للخير</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-blue-700 shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700 text-white font-bold text-xl overflow-hidden">
+                   H
+                </div>
+<span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center">الهلال</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700 overflow-hidden p-2">
+<img alt="Burger King" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuLSZrSQOXUtz1tgrFGRJe0HkiYf01pNIUG_CLbsn2uApjeCWC2cliv5h_Dmy9sa9wOPrartEmc9UKtW8gfcEdaZc4YoFGs0Klc16ghnJQ2OoW2YpQ7bnCk2ndl789nwNR3tJt5Gk-5v41FRri0vXjncXLwR2KbzmtAmCiJc68kmdREtUvycc6lFNUj3P6kljJ1dU7fPGLDmAi8Qbor_HrOGokVposvP2Qj2mfrvsFDs0Pek51jK2VcZ_o9rYdDi30uHhMkV789hse"/>
+</div>
+<span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center">برجر كنج</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700 overflow-hidden p-2">
+<div class="text-red-600 font-bold text-xs flex flex-col items-center">
+<span>Liwan</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center">الليوان</span>
+</div>
+<div class="flex flex-col items-center min-w-[70px] gap-2">
+<div class="w-16 h-16 rounded-full bg-white dark:bg-surface-dark shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700 overflow-hidden p-2">
+<div class="text-purple-600 font-bold text-[8px] flex flex-col items-center">
+<span>Manoosha</span>
+</div>
+</div>
+<span class="text-[10px] font-bold text-gray-800 dark:text-gray-200 text-center">منؤشة</span>
+</div>
+</div>
+</div>
+<div class="px-4 mt-6 mb-20">
+<div class="flex items-start gap-4 p-4 bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+<div class="w-16 h-16 rounded-lg bg-green-900 flex items-center justify-center flex-shrink-0">
+<span class="material-icons-round text-white text-3xl">restaurant</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-lg text-gray-800 dark:text-white flex items-center gap-2">
+                    سالدوتش -Saldwich
+                    <span class="text-red-500">🌶️</span>
+                    جرب هوت شوت
+                </h3>
+<div class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                     صحي | 1.0 كم
+                </div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800 pb-safe pt-2 px-6 z-50">
+<div class="flex justify-between items-center text-xs font-medium pb-4">
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-icons-round text-2xl">home</span>
+<span>الرئيسية</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+<span class="material-icons-round text-2xl">explore</span>
+<span>اكسبلور</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+<span class="material-icons-round text-2xl">receipt_long</span>
+<span>طلباتي</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+<span class="material-icons-round text-2xl">video_library</span>
+<span>فواصل</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+<span class="material-icons-round text-2xl">more_horiz</span>
+<span>المزيد</span>
+</div>
+</div>
+</div>
+
+</body></html>

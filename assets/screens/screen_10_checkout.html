@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout Screen Clone</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#FF0000", // Red color from the "Pay Now" button
+              "background-light": "#F9FAFB", // Light gray background
+              "background-dark": "#121212", // Dark mode background
+              "surface-light": "#FFFFFF",
+              "surface-dark": "#1E1E1E",
+              "text-primary-light": "#111827",
+              "text-primary-dark": "#F3F4F6",
+              "text-secondary-light": "#6B7280",
+              "text-secondary-dark": "#9CA3AF",
+              "border-light": "#E5E7EB",
+              "border-dark": "#374151",
+            },
+            fontFamily: {
+              display: ["Cairo", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              'xl': '1rem',
+              '2xl': '1.5rem',
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        body {
+            font-family: 'Cairo', sans-serif;
+        }.custom-radio:checked {
+            background-color: transparent;
+            border-color: #FF0000;
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23FF0000' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+        }
+        .custom-radio {
+            color: #FF0000;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark antialiased transition-colors duration-200">
+<div class="max-w-md mx-auto min-h-screen flex flex-col relative pb-24">
+<header class="flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark sticky top-0 z-10 shadow-sm dark:shadow-none dark:border-b dark:border-border-dark">
+<div class="w-8">
+</div>
+<h1 class="text-xl font-bold">اتمام الطلب</h1>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-icons-round text-2xl transform rotate-180">chevron_left</span>
+</button>
+</header>
+<main class="flex-1 p-4 space-y-6">
+<section>
+<h2 class="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark mb-3">طريقة الدفع</h2>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg">
+<div class="w-8 h-5 flex items-center justify-center bg-blue-600 rounded text-[8px] font-bold text-white tracking-tighter">mada</div>
+</div>
+<span class="font-medium text-lg">بطاقة مدى</span>
+</div>
+<button class="text-primary font-medium text-sm flex items-center gap-1 hover:opacity-80 transition-opacity">
+<span class="material-icons-round text-sm">chevron_left</span>
+                        تغيير
+                    </button>
+</div>
+</section>
+<section>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-icons-round text-text-secondary-light dark:text-text-secondary-dark text-lg">info</span>
+<h2 class="text-sm font-semibold text-text-primary-light dark:text-text-primary-dark">إكسب نقاط الولاء</h2>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm overflow-hidden">
+<label class="flex items-center justify-between p-4 border-b border-border-light dark:border-border-dark cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+<div class="flex items-center gap-4">
+<input class="w-5 h-5 text-primary border-gray-300 focus:ring-primary custom-radio" name="loyalty" type="radio"/>
+<div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-xs">
+                                qitaf
+                            </div>
+<div>
+<div class="font-bold text-base">قطاف</div>
+<div class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">اربح 1 نقطة</div>
+</div>
+</div>
+<div class="text-right text-xs text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 dir-ltr">
+                             966555446622 <span class="material-icons-round text-sm">chevron_right</span>
+</div>
+</label>
+<label class="flex items-center justify-between p-4 border-b border-border-light dark:border-border-dark cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+<div class="flex items-center gap-4">
+<input class="w-5 h-5 text-primary border-gray-300 focus:ring-primary custom-radio" name="loyalty" type="radio"/>
+<div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs overflow-hidden">
+                                mokafaa
+                            </div>
+<div>
+<div class="font-bold text-base">مكافأة</div>
+<div class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">اربح 40 نقطة</div>
+</div>
+</div>
+<div class="text-right text-xs text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 dir-ltr">
+                             966555446622 <span class="material-icons-round text-sm">chevron_right</span>
+</div>
+</label>
+<label class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+<div class="flex items-center gap-4">
+<input class="w-5 h-5 text-primary border-gray-300 focus:ring-primary custom-radio" name="loyalty" type="radio"/>
+<div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-700 dark:text-green-500 overflow-hidden">
+<span class="material-icons-round">park</span>
+</div>
+<div>
+<div class="font-bold text-base">الفرسان</div>
+<div class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">اربح 8 ميل</div>
+</div>
+</div>
+<button class="text-xs text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 hover:text-primary transition-colors">
+                            اضافة رقم عضوية <span class="material-icons-round text-sm">chevron_left</span>
+</button>
+</label>
+</div>
+</section>
+<section>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-icons-round text-primary text-lg">local_offer</span>
+<h2 class="text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark">رمز التخفيض</h2>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow text-right placeholder-gray-400 dark:placeholder-gray-600" placeholder="رمز التخفيض" type="text"/>
+</div>
+</section>
+<div class="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark px-4 py-2">
+                لا يمكن إلغاء الطلبات باستثناء الطلبات المجدولة
+            </div>
+<section class="space-y-3 pt-4 border-t border-dashed border-border-light dark:border-border-dark">
+<div class="flex justify-between items-center text-sm">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">الإجمالي</span>
+<span class="font-medium dir-ltr">46.00 ريال</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">رسوم التوصيل</span>
+<div class="flex items-center gap-2 dir-ltr">
+<span class="font-bold text-primary">5.00 ريال</span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark line-through text-xs">18.00 ريال</span>
+</div>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">ضريبة القيمة المضافة (15%)</span>
+<span class="font-medium text-text-secondary-light dark:text-text-secondary-dark dir-ltr">6.65 ريال</span>
+</div>
+</section>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] max-w-md mx-auto z-20">
+<div class="flex justify-between items-center mb-4">
+<span class="font-bold text-lg text-text-primary-light dark:text-text-primary-dark">المبلغ الكلي</span>
+<div class="flex items-center gap-2 dir-ltr">
+<span class="font-bold text-xl text-primary">51.00 ريال</span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark line-through text-sm">64.00 ريال</span>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-red-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-[0.98]">
+                ادفع الآن
+            </button>
+</footer>
+</div>
+
+</body></html>

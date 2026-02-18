@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shopping Cart Clone</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#ff0000", // Red color from the button
+              "background-light": "#f9f9f9",
+              "background-dark": "#121212",
+              "card-light": "#ffffff",
+              "card-dark": "#1e1e1e",
+              "text-primary-light": "#111827",
+              "text-primary-dark": "#f3f4f6",
+              "text-secondary-light": "#6b7280",
+              "text-secondary-dark": "#9ca3af",
+              "border-light": "#e5e7eb",
+              "border-dark": "#374151",
+            },
+            fontFamily: {
+              display: ['Almarai', 'sans-serif'],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              'xl': '0.75rem',
+              '2xl': '1rem',
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        body {
+            font-family: 'Almarai', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark transition-colors duration-200 min-h-screen flex flex-col justify-between">
+<header class="p-4 bg-card-light dark:bg-card-dark shadow-sm z-10 sticky top-0">
+<div class="flex flex-col items-center justify-center relative">
+<div class="flex items-center gap-2 text-xl font-bold text-center">
+<span>سالدوتش - Saldwich</span>
+<span class="text-2xl">🌶️</span>
+<span>جرب هوت شوت</span>
+</div>
+<div class="mt-1 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium">
+                1 المنتجات
+            </div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-4 pb-32">
+<div class="bg-card-light dark:bg-card-dark rounded-xl p-4 shadow-sm mb-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg px-2 py-1 shadow-sm">
+<button class="p-1 text-text-primary-light dark:text-text-primary-dark hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition">
+<span class="material-icons-outlined text-lg font-bold">add</span>
+</button>
+<span class="mx-3 font-bold text-lg">1</span>
+<button class="p-1 text-text-primary-light dark:text-text-primary-dark hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition">
+<span class="material-icons-outlined text-lg font-bold">remove</span>
+</button>
+</div>
+<button class="p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-red-500 transition">
+<span class="material-icons-outlined">delete_outline</span>
+</button>
+</div>
+<div class="flex gap-4 text-right flex-1 justify-end">
+<div class="flex flex-col items-end">
+<h3 class="font-bold text-lg">هوت شوت</h3>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                            تورتيلا أبيض (1)
+                        </p>
+<p class="font-bold mt-2 text-sm dir-ltr">
+<span class="text-xs mr-1">SAR</span>46.00
+                        </p>
+</div>
+<img alt="Hot Shot Meal" class="w-20 h-20 rounded-xl object-cover shadow-sm bg-gray-200 dark:bg-gray-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT-5kiI4W9NPObo40OK1B5V1J1yOn1BgDv4BnTl-GLoCTmMPguf0tVzqnPoXmTKGx2d45i0b4lXArxhvc16u42eTXKwghTmee0KmptNfytLOucjJWA7ifr9dwigWQq2ySht28vE4Ep8__7LkCtuQAGxC67J5y0qjXsyUoIsVdyDRh10w1F8bEtPVoalgWj0NOWmX7-K-SJKqndoymidg8vbCF-nbL4VEEEictjwRjg5gBTAoslk0ojHnKr_HrqpMhPmuJlguIrbUpd"/>
+</div>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-xl p-4 shadow-sm mb-6">
+<label class="sr-only" for="note">Add a note</label>
+<textarea class="w-full bg-white dark:bg-gray-800 border-2 border-border-light dark:border-border-dark rounded-xl p-4 text-right placeholder-text-secondary-light dark:placeholder-text-secondary-dark focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all outline-none" id="note" placeholder="اكتب ملاحظة" rows="4"></textarea>
+</div>
+<div class="bg-card-light dark:bg-card-dark rounded-xl p-4 shadow-sm mb-6">
+<div class="flex items-center justify-end gap-2 mb-2">
+<span class="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">انت مؤهل للحصول على عرض توصيل!</span>
+<span class="text-lg">🥳</span>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="bg-green-600 h-2.5 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</main>
+<footer class="bg-card-light dark:bg-card-dark p-4 rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(255,255,255,0.05)] z-20">
+<div class="flex justify-between items-center mb-4 px-2">
+<div class="flex items-baseline gap-1 font-bold text-xl dir-ltr">
+<span class="text-sm font-normal text-text-secondary-light dark:text-text-secondary-dark">SAR</span>
+                46.00
+            </div>
+<span class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">الإجمالي</span>
+</div>
+<button class="w-full bg-primary hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-transform transform active:scale-95 text-lg">
+            المتابعة
+        </button>
+</footer>
+
+</body></html>
