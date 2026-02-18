@@ -13,6 +13,14 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 if (!global.btoa) { global.btoa = btoa; }
 if (!global.atob) { global.atob = atob; }
 
+interface Restaurant {
+    id: string;
+    name_ar: string;
+    name_en: string;
+    ai_voice_context: string;
+    menu_json: any[];
+}
+
 interface VoiceOverlayProps {
     userId?: string;
     visible: boolean;
@@ -24,11 +32,19 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
     const [isConnected, setIsConnected] = useState(false);
     const [status, setStatus] = useState('Idle');
     const [transcript, setTranscript] = useState('');
+    const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
+    const [currentAiText, setCurrentAiText] = useState('');
+    const scrollViewRef = useRef<ScrollView>(null);
     const ws = useRef<WebSocket | null>(null);
     const recording = useRef<Audio.Recording | null>(null);
     const audioBuffer = useRef<string>('');
     const currentSound = useRef<Audio.Sound | null>(null);
     const isSpeaking = useRef<boolean>(false);
+
+    // Restaurant menu data — pre-loaded on mic open for zero latency
+    const restaurantsRef = useRef<Restaurant[]>([]);
+    const selectedRestaurantRef = useRef<Restaurant | null>(null);
+    const menusLoadedRef = useRef<boolean>(false);
 
     // Animation Values
     const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -43,6 +59,26 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
 
     const SUPABASE_PROJECT_ID = 'vnqtonsbvnaxtoldvycy';
 
+    // Pre-load restaurant menus from Supabase
+    const preloadMenus = async () => {
+        if (menusLoadedRef.current) return;
+        try {
+            console.log('[MENUS] Pre-loading restaurant menus...');
+            const { data, error } = await supabase.functions.invoke('get-restaurant-menus');
+            if (error) {
+                console.error('[MENUS] Error loading menus:', error);
+                return;
+            }
+            if (data?.restaurants) {
+                restaurantsRef.current = data.restaurants;
+                menusLoadedRef.current = true;
+                console.log(`[MENUS] Loaded ${data.restaurants.length} restaurants:`, data.restaurants.map((r: Restaurant) => r.name_en));
+            }
+        } catch (e) {
+            console.error('[MENUS] Failed to pre-load menus:', e);
+        }
+    };
+
     useEffect(() => {
         console.log('VoiceOverlay mounted/updated, visible:', visible, 'isConnected:', isConnected, 'isListening:', isListening);
         if (visible) {
@@ -50,16 +86,20 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             setStatus('Idle');
             setTranscript('');
             startPulseAnimation();
+            // Pre-load menus in parallel — they'll be ready by the time user picks a restaurant
+            preloadMenus();
         } else {
             console.log('VoiceOverlay closing resources...');
             setIsListening(false);
             stopRecording();
-            stopPulseAnimation(); // Clean up animation
+            stopPulseAnimation();
             if (ws.current) {
                 console.log('Closing WebSocket...');
                 ws.current.close();
                 ws.current = null;
             }
+            // Reset restaurant selection for next session
+            selectedRestaurantRef.current = null;
         }
     }, [visible]);
 
@@ -102,7 +142,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                     Animated.timing(anim, {
                         toValue: 50 + (Math.random() * 30),
                         duration: 500 + (index * 100),
-                        useNativeDriver: false, // height doesn't support native driver
+                        useNativeDriver: false,
                     }),
                     Animated.timing(anim, {
                         toValue: 20,
@@ -121,79 +161,152 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
         }
     }, [isListening]);
 
+    // Build the initial AI instructions (no menu loaded yet)
+    const getInitialInstructions = () => {
+        const restaurantNames = restaurantsRef.current.map(r => r.name_ar).join('، ');
+        return `أنت مساعد ذكي ودود اسمك "جاهز AI" تعمل في تطبيق جاهز لتوصيل الطعام في السعودية.
+تتحدث بالعربية بلهجة سعودية نجدية ودية وطبيعية.
+
+**شخصيتك:**
+- ودود، سريع، وعملي.
+- تستخدم تعابير سعودية عامية: "أبشر!"، "تمم"، "حاضر"، "على راسي"، "يابعدي"، "حياك".
+- ردودك قصيرة ومباشرة جداً. جملة أو جملتين فقط. لا تطوّل أبداً.
+- صوتك حماسي ومرح.
+
+**فهم اللهجة السعودية — مهم جداً:**
+المستخدم يتكلم بالعامية السعودية. يجب أن تفهم هذه الكلمات:
+- "أبي" أو "أبغى" = أريد
+- "وش" = ماذا
+- "وش عندكم" = ماذا لديكم
+- "خلاص" أو "بس كذا" = انتهيت
+- "زيد" أو "ضيف" = أضف المزيد
+- "شيل" أو "حذف" = احذف
+- "كم السعر" أو "بكم" = ما السعر
+- "عطني" أو "حطلي" = أعطني / أضف لي
+- "وجبة" = meal
+- "مسحب" = pulled chicken (mashab)
+- "بروست" = broasted/fried chicken
+- "روبيان" = shrimp
+- "أكوم" = صوص الثوم من البيك (ACOM garlic sauce)
+
+**أمثلة على طلبات المستخدم:**
+- "أبي من البيك" = يريد الطلب من مطعم البيك
+- "عطني اثنين بروست" = أضف وجبة بروست قطعتين
+- "أبي روبيان" = أضف وجبة روبيان
+- "أبي بيج ماك" = أضف بيج ماك
+- "وش عندكم" = اعرض أقسام القائمة
+- "بس كذا أكد" = أكد الطلب
+
+**الحالة الحالية:**
+- لم يتم اختيار مطعم بعد.
+- المطاعم المتاحة: ${restaurantNames || 'البيك، الرومانسية، ماكدونالدز'}
+- User ID = '${userId || 'guest-user-123'}'.
+
+**المهام:**
+1. عند أول اتصال، رحّب بالمستخدم ترحيب حار وقصير واسأله من أي مطعم يبي يطلب. اذكر أسماء المطاعم.
+2. لما المستخدم يقول اسم مطعم، استخدم أداة select_restaurant فوراً.
+3. بعد ما يتم تحميل القائمة، ساعد المستخدم في الطلب.
+4. لا تحاول تعرض قائمة طعام قبل استخدام select_restaurant.
+
+**تعليمات مهمة:**
+- لا تذكر أي IDs أو معلومات تقنية.
+- الأسعار بالريال السعودي.
+- ردودك قصيرة جداً — جملة أو جملتين فقط.`;
+    };
+
+    // Build updated instructions after restaurant selection (with full menu)
+    const getMenuInstructions = (restaurant: Restaurant) => {
+        // Format menu for AI context
+        const menuText = restaurant.menu_json.map((cat: any) => {
+            const items = cat.items
+                .filter((item: any) => item.available)
+                .map((item: any) => `  - ${item.name_ar} (${item.name_en}): ${item.price} ريال — ${item.description_ar}`)
+                .join('\n');
+            return `📋 ${cat.category_ar}:\n${items}`;
+        }).join('\n\n');
+
+        return `أنت مساعد ذكي ودود اسمك "جاهز AI" تعمل في تطبيق جاهز لتوصيل الطعام في السعودية.
+تتحدث بالعربية بلهجة سعودية نجدية ودية وطبيعية.
+
+**شخصيتك:**
+- ودود، سريع، وعملي.
+- تستخدم تعابير سعودية عامية: "أبشر!"، "تمم"، "حاضر"، "على راسي"، "يابعدي"، "حياك".
+- ردودك قصيرة جداً ومباشرة. جملة أو جملتين فقط.
+- صوتك حماسي ومرح.
+
+**فهم اللهجة السعودية — مهم جداً:**
+المستخدم يتكلم بالعامية السعودية:
+- "أبي" أو "أبغى" = أريد
+- "وش" أو "ايش" = ماذا
+- "وش عندكم" = ماذا لديكم / اعرض القائمة
+- "خلاص" أو "بس كذا" = انتهيت
+- "زيد" أو "ضيف" = أضف المزيد
+- "شيل" أو "حذف" أو "لا خلاص بدونه" = احذف
+- "بكم" أو "كم سعره" = ما السعر
+- "عطني" أو "حطلي" = أعطني / أضف لي
+- "أكد" أو "تمم" = أكد الطلب
+- "غير المطعم" = يريد تغيير المطعم
+
+**المطعم المختار: ${restaurant.name_ar} (${restaurant.name_en})**
+${restaurant.ai_voice_context}
+
+**القائمة الكاملة:**
+${menuText}
+
+**User ID:** '${userId || 'guest-user-123'}'
+
+**المهام:**
+1. ساعد المستخدم في اختيار أصناف من القائمة.
+2. لما يطلب صنف، أكّد الاسم والسعر بجملة وحدة.
+3. تتبّع الطلب (الأصناف، الكميات، المجموع) في ذاكرتك.
+4. لما يقول "أكد" أو "خلاص" أو "تمم" أو "بس كذا"، استخدم confirm_order واذكر ملخص الطلب والمجموع.
+5. لو يبي يغيّر المطعم، استخدم select_restaurant.
+6. لو سأل "وش عندكم" أو "قولي الأقسام"، اذكر أسماء الأقسام فقط: ${restaurant.menu_json.map((c: any) => c.category_ar).join('، ')}.
+7. لو سأل عن قسم معين، اذكر أصنافه وأسعاره.
+
+**تعليمات مهمة:**
+- لا تذكر أي IDs.
+- ردودك قصيرة جداً — جملة أو جملتين فقط.
+- لا تقرأ القائمة كاملة إلا إذا طلب ذلك.
+- الأسعار بالريال السعودي.`;
+    };
 
     const connectToOpenAIDirectly = async (authToken: string) => {
         if (ws.current) return;
 
-        // Define Instructions locally
-        const instructions = `أنت مساعد ذكي ودود اسمك "جاهز AI" تعمل في تطبيق جاهز لتوصيل الطعام في السعودية.
-تتحدث بالعربية بلهجة سعودية ودية وطبيعية.
-
-**شخصيتك:**
-- ودود، سريع، وعملي. تستخدم تعابير سعودية مثل "أبشر!"، "تمم"، "حاضر"، "على راسي".
-- ردودك قصيرة ومباشرة. لا تطوّل في الكلام.
-- صوتك حماسي ومرح.
-
-**قدراتك:**
-1. البحث في القائمة: إذا طلب المستخدم أكل معين، استخدم search_menu_items للبحث.
-2. إضافة للسلة: أكّد الصنف والكمية قبل الإضافة باستخدام add_to_cart.
-3. عرض السلة: استخدم get_cart_summary لعرض محتوى السلة.
-4. تأكيد الطلب: اسأل المستخدم قبل تنفيذ confirm_order.
-
-**تعليمات مهمة:**
-- إذا أرجع البحث نتائج، اذكر اسم الصنف وسعره فقط. لا تقرأ أي IDs.
-- إذا قال المستخدم شي عام مثل "جوعان"، اقترح أصناف مشهورة أو اسأله عن تفضيله.
-- Restaurant ID = '1' (ثابت للديمو).
-- User ID = '${userId || 'guest-user-123'}'.
-- عند أول اتصال، رحّب بالمستخدم ترحيب حار وقصير وعرّف عن نفسك.
-`;
-
         const tools = [
             {
                 type: "function",
-                name: "search_menu_items",
-                description: "Search for items in the menu based on a query.",
+                name: "select_restaurant",
+                description: "Select a restaurant to order from. Call this when the user says which restaurant they want.",
                 parameters: {
                     type: "object",
                     properties: {
-                        query: { type: "string", description: "The search query (e.g., 'burger', 'pepsi', 'kabsa')" },
-                        restaurant_id: { type: "string", description: "The restaurant ID (default to '1')" }
+                        restaurant_name: {
+                            type: "string",
+                            description: "The name of the restaurant the user wants (e.g., 'البيك', 'الرومانسية', 'ماكدونالدز', 'Al Baik', 'McDonald\\'s')"
+                        }
                     },
-                    required: ["query", "restaurant_id"]
-                }
-            },
-            {
-                type: "function",
-                name: "add_to_cart",
-                description: "Add a specific menu item to the user's cart.",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        menu_item_id: { type: "string", description: "The UUID of the menu item to add" },
-                        quantity: { type: "integer", description: "Quantity of the item (default 1)" }
-                    },
-                    required: ["menu_item_id"]
-                }
-            },
-            {
-                type: "function",
-                name: "get_cart_summary",
-                description: "Get the current items in the user's cart and the total.",
-                parameters: {
-                    type: "object",
-                    properties: {},
+                    required: ["restaurant_name"]
                 }
             },
             {
                 type: "function",
                 name: "confirm_order",
-                description: "Place the order with the current cart contents.",
+                description: "Confirm and place the user's order. Call this when the user says they want to confirm/finalize their order.",
                 parameters: {
                     type: "object",
                     properties: {
-                        delivery_address_id: { type: "string", description: "Address ID (default to 'home')" }
+                        order_summary: {
+                            type: "string",
+                            description: "A summary of what the user ordered, e.g., 'وجبة قطعتين بروست × 1، روبيان ٦ قطع × 2'"
+                        },
+                        total_price: {
+                            type: "number",
+                            description: "The total price in SAR"
+                        }
                     },
-                    required: ["delivery_address_id"]
+                    required: ["order_summary", "total_price"]
                 }
             }
         ];
@@ -202,12 +315,10 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             console.log('Fetching ephemeral token...');
             setStatus('Connecting...');
 
-            // 1. Get Ephemeral Token from our Backend using Supabase Client
+            // 1. Get Ephemeral Token
             const { data, error } = await supabase.functions.invoke('openai-realtime-proxy', {
                 method: 'POST',
                 headers: {
-                    // Authorization is allowed to be missing for guest mode as per our Edge Function update
-                    // But if we have a token, sending it is good practice
                     ...(authToken && authToken !== 'guest-demo-token' ? { Authorization: `Bearer ${authToken}` } : {})
                 },
             });
@@ -226,22 +337,16 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
 
             console.log('Got ephemeral key, connecting to OpenAI...');
 
-            // 2. Connect to OpenAI Realtime API directly
+            // 2. Connect to OpenAI Realtime API
             const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview";
-
-            // RN WebSocket fix: Pass token in subprotocols to avoid header stripping issues
-            // standard protocols + special auth protocol
             const protocols = [
                 "realtime",
                 `openai-insecure-api-key.${ephemeralKey}`,
             ];
 
-            console.log('Connecting WS with protocols:', protocols);
-
-            // @ts-ignore - React Native WebSocket supports headers in 3rd arg (options)
+            // @ts-ignore
             const socket = new WebSocket(url, protocols, {
                 headers: {
-                    // "Authorization": `Bearer ${ephemeralKey}`, // Removed to avoid conflict with protocol
                     "OpenAI-Beta": "realtime=v1"
                 }
             });
@@ -251,65 +356,62 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                 setIsConnected(true);
                 setStatus('Ready');
 
-                // Initialize Session
+                // Initialize Session with restaurant-selection instructions
                 const sessionUpdate = {
                     type: 'session.update',
                     session: {
-                        instructions: instructions,
+                        instructions: getInitialInstructions(),
                         voice: 'alloy',
-                        turn_detection: { type: 'server_vad', threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
+                        turn_detection: { type: 'server_vad', threshold: 0.45, prefix_padding_ms: 500, silence_duration_ms: 750 },
                         modalities: ["text", "audio"],
                         input_audio_format: "pcm16",
                         output_audio_format: "pcm16",
+                        input_audio_transcription: { model: 'whisper-1' },
                         tools: tools,
                         tool_choice: 'auto',
                     }
                 };
                 socket.send(JSON.stringify(sessionUpdate));
 
-                // Trigger initial greeting from the AI
+                // Trigger initial greeting — AI will ask which restaurant
                 setTimeout(() => {
                     console.log('Requesting AI greeting...');
+                    const restaurantNames = restaurantsRef.current.map(r => r.name_ar).join(' و');
                     socket.send(JSON.stringify({
                         type: 'response.create',
                         response: {
                             modalities: ['text', 'audio'],
-                            instructions: 'قول: أهلاً! أنا جاهز AI، وش تبي تطلب اليوم؟ - جملة وحدة فقط، لا تطوّل'
+                            instructions: `رحّب بالمستخدم ترحيب حار وقصير وعرّف عن نفسك إنك "جاهز AI" واسأله من أي مطعم يبي يطلب. اذكر المطاعم المتاحة: ${restaurantNames || 'البيك والرومانسية وماكدونالدز'}. جملتين فقط لا تطوّل.`
                         }
                     }));
                 }, 500);
 
-                // Start Recording after greeting has time to begin
+                // Start Recording
                 setTimeout(() => startRecording(), 3000);
             };
 
             socket.onmessage = async (event) => {
                 try {
-                    console.log('WS RAW MSG:', event.data.toString().substring(0, 100)); // Log first 100 chars
                     const msg = JSON.parse(event.data as string);
 
                     if (msg.type === 'error') {
-                        console.error("OpenAI Error Message:", JSON.stringify(msg, null, 2));
+                        console.error("OpenAI Error:", JSON.stringify(msg, null, 2));
                     }
 
                     if (msg.type === 'response.created') {
-                        // AI is generating a response — mute mic to prevent feedback
-                        console.log('AI responding — muting mic input');
+                        // AI is generating — mute mic
                         isSpeaking.current = true;
                         audioBuffer.current = '';
-                        // Clear the input buffer so OpenAI doesn't process speaker echo
                         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                             ws.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
                         }
                     }
 
                     if (msg.type === 'response.audio.delta' && msg.delta) {
-                        // Buffer the audio chunk — don't play yet
                         audioBuffer.current += msg.delta;
                     }
 
                     if (msg.type === 'response.audio.done') {
-                        // All chunks received — play the combined audio as one sound
                         console.log('Audio complete, playing buffered audio, length:', audioBuffer.current.length);
                         if (audioBuffer.current.length > 0) {
                             await playAudioChunk(audioBuffer.current);
@@ -318,38 +420,46 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                     }
 
                     if (msg.type === 'response.audio_transcript.delta' && msg.delta) {
-                        setTranscript(prev => prev + msg.delta);
+                        setCurrentAiText(prev => prev + msg.delta);
                     }
 
-                    if (msg.type === 'response.function_call_arguments.done') {
-                        // Tool call handling
-                        console.log("Tool call request:", msg);
-                        // Note: OpenAI Realtime 'response.function_call_arguments.done' might be deprecated or different?
-                        // It uses 'response.output_item.done' with item.type='function_call' usually.
-                        // But let's check the logs if it fails.
-                        // For now, let's add basic logging.
+                    if (msg.type === 'response.audio_transcript.done') {
+                        if (msg.transcript) {
+                            setMessages(prev => [...prev, { role: 'ai', text: msg.transcript }]);
+                        }
+                        setCurrentAiText('');
                     }
 
-                    if (msg.type === 'response.done') {
-                        console.log('Full Response Done:', JSON.stringify(msg, null, 2));
+                    if (msg.type === 'conversation.item.input_audio_transcription.completed') {
+                        if (msg.transcript && msg.transcript.trim()) {
+                            setMessages(prev => [...prev, { role: 'user', text: msg.transcript.trim() }]);
+                        }
                     }
 
+                    // Handle tool calls
                     if (msg.type === 'response.output_item.done' && msg.item.type === 'function_call') {
-                        const { name, arguments: args } = msg.item;
+                        const { name, arguments: argsStr } = msg.item;
                         const callId = msg.item.call_id;
-                        setStatus(`Executing ${name}...`);
-                        const result = await executeTool(name, JSON.parse(args));
+                        const args = JSON.parse(argsStr);
 
+                        console.log(`[TOOL] ${name} called with:`, args);
+
+                        let result: any;
+
+                        if (name === 'select_restaurant') {
+                            result = handleSelectRestaurant(args.restaurant_name, socket);
+                        } else if (name === 'confirm_order') {
+                            result = handleConfirmOrder(args);
+                        } else {
+                            result = { error: `Unknown tool: ${name}` };
+                        }
+
+                        // Send tool result back
                         socket.send(JSON.stringify({
                             type: 'conversation.item.create',
                             item: { type: 'function_call_output', call_id: callId, output: JSON.stringify(result) }
                         }));
                         socket.send(JSON.stringify({ type: 'response.create' }));
-                        setStatus('Listening...');
-                    }
-
-                    if (msg.type === 'error') {
-                        console.error("OpenAI Error Message:", msg);
                     }
 
                 } catch (e) {
@@ -376,23 +486,88 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
         }
     };
 
-    const executeTool = async (name: string, args: any) => {
-        try {
-            const payload = { function_name: name, arguments: { ...args, user_id: userId }, session_id: 'mobile-session' };
-            const { data, error } = await supabase.functions.invoke('process-voice-intent', { body: payload });
-            return error ? { error: error.message } : data;
-        } catch (e: any) { return { error: e.message }; }
+    // Handle select_restaurant tool call — instant since menus are pre-loaded
+    const handleSelectRestaurant = (restaurantName: string, socket: WebSocket) => {
+        console.log(`[TOOL] select_restaurant: "${restaurantName}"`);
+
+        // Fuzzy match restaurant name
+        const normalizedInput = restaurantName.toLowerCase().trim();
+        const restaurant = restaurantsRef.current.find(r => {
+            const nameAr = r.name_ar.toLowerCase();
+            const nameEn = r.name_en.toLowerCase();
+            const id = r.id.toLowerCase();
+            return nameAr.includes(normalizedInput) ||
+                normalizedInput.includes(nameAr) ||
+                nameEn.includes(normalizedInput) ||
+                normalizedInput.includes(nameEn) ||
+                id.includes(normalizedInput) ||
+                // Common partial matches
+                (normalizedInput.includes('بيك') && nameAr.includes('البيك')) ||
+                (normalizedInput.includes('baik') && nameEn.toLowerCase().includes('baik')) ||
+                (normalizedInput.includes('رومانسي') && nameAr.includes('الرومانسية')) ||
+                (normalizedInput.includes('romansiah') && nameEn.toLowerCase().includes('romansiah')) ||
+                (normalizedInput.includes('ماكدونالدز') && nameAr.includes('ماكدونالدز')) ||
+                (normalizedInput.includes('ماك') && nameAr.includes('ماكدونالدز')) ||
+                (normalizedInput.includes('mcdonald') && nameEn.toLowerCase().includes('mcdonald'));
+        });
+
+        if (!restaurant) {
+            const available = restaurantsRef.current.map(r => r.name_ar).join('، ');
+            return {
+                success: false,
+                error: `لم أجد مطعم بهذا الاسم. المطاعم المتاحة: ${available}`
+            };
+        }
+
+        selectedRestaurantRef.current = restaurant;
+
+        // Inject the full menu into the AI's instructions via session.update
+        const updatedInstructions = getMenuInstructions(restaurant);
+        socket.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+                instructions: updatedInstructions,
+            }
+        }));
+
+        console.log(`[TOOL] Restaurant selected: ${restaurant.name_en}, menu injected with ${restaurant.menu_json.length} categories`);
+
+        // Return category summary so AI can respond naturally
+        const categories = restaurant.menu_json.map((cat: any) => cat.category_ar).join('، ');
+        const totalItems = restaurant.menu_json.reduce((sum: number, cat: any) => sum + cat.items.length, 0);
+
+        return {
+            success: true,
+            restaurant_name_ar: restaurant.name_ar,
+            restaurant_name_en: restaurant.name_en,
+            categories: categories,
+            total_items: totalItems,
+            message: `تم اختيار ${restaurant.name_ar}. الأقسام المتاحة: ${categories}`
+        };
+    };
+
+    // Handle confirm_order — just a confirmation for now (no DB write)
+    const handleConfirmOrder = (args: { order_summary: string; total_price: number }) => {
+        console.log(`[TOOL] confirm_order:`, args);
+        return {
+            success: true,
+            order_id: `ORD-${Date.now()}`,
+            status: 'confirmed',
+            estimated_delivery: '20-30 دقيقة',
+            summary: args.order_summary,
+            total: args.total_price,
+            message: `تم تأكيد طلبك! المجموع: ${args.total_price} ريال. التوصيل المتوقع: 20-30 دقيقة. بالعافية! 🎉`
+        };
     };
 
     const playAudioChunk = async (pcmBase64: string) => {
         if (!pcmBase64) return;
         try {
-            // Stop any currently playing sound first
             if (currentSound.current) {
                 try {
                     await currentSound.current.stopAsync();
                     await currentSound.current.unloadAsync();
-                } catch (e) { /* ignore if already unloaded */ }
+                } catch (e) { /* ignore */ }
                 currentSound.current = null;
             }
 
@@ -407,7 +582,6 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                 if (status.isLoaded && status.didJustFinish) {
                     newSound.unloadAsync();
                     if (currentSound.current === newSound) currentSound.current = null;
-                    // Playback done — unmute mic
                     console.log('Playback finished — resuming mic input');
                     isSpeaking.current = false;
                 }
@@ -417,16 +591,13 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
 
     const startRecording = async () => {
         try {
-            // Request permissions still needed? Yes.
-            // Request permissions still needed? Yes.
             await Audio.requestPermissionsAsync();
-            // We still use Expo Audio for playback, so keep setAudioModeAsync?
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
                 staysActiveInBackground: true,
                 shouldDuckAndroid: true,
-                playThroughEarpieceAndroid: false // Force Speaker
+                playThroughEarpieceAndroid: false
             });
 
             const options = {
@@ -441,7 +612,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             LiveAudioStream.init(options);
 
             LiveAudioStream.on('data', (data) => {
-                if (isSpeaking.current) return; // Don't send mic data while AI is speaking
+                if (isSpeaking.current) return;
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                     ws.current.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: data }));
                 }
@@ -476,11 +647,9 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
         if (isListening) {
             stopRecording();
         } else {
-            // IMMEDIATE: Switch to Listening View (Second Picture)
             setIsListening(true);
             setStatus('Connecting...');
 
-            // Connect and Start
             if (!isConnected) {
                 try {
                     const { data } = await supabase.auth.getSession();
@@ -489,26 +658,21 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                     if (!token) {
                         console.log('No session, attempting anonymous sign in...');
                         const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
-
                         if (anonData?.session) {
                             token = anonData.session.access_token;
                         } else {
-                            // If Anon auth fails (e.g. disabled), fallback to guest mode immediately
                             console.log('Anon auth not available, using Guest Mode.');
                             token = 'guest-demo-token';
-                            // We don't need a real auth token for the Edge Function if we relaxed the check there.
                         }
                     }
 
                     if (token) {
                         connectToOpenAIDirectly(token);
                     } else {
-                        // Should technically not happen with fallback
                         setStatus('Auth Error');
                     }
                 } catch (e) {
                     console.error("Auth check failed", e);
-                    // Fallback even on crash
                     connectToOpenAIDirectly('guest-demo-token');
                 }
             } else {
@@ -542,7 +706,6 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                     {!isListening ? (
                         <>
                             {/* Idle State */}
-                            {/* Background Elements */}
                             <View className="absolute top-20 right-10 opacity-10 transform rotate-12">
                                 <MaterialIcons name="fastfood" size={48} color="#DC2626" />
                             </View>
@@ -570,25 +733,42 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                                 </View>
                                 <View className="mt-8 items-center">
                                     <Text className="text-xl font-bold text-gray-900 mb-2">اضغط للطلب بالصوت</Text>
-                                    <Text className="text-gray-500 text-sm">جرب قول "اطلب بيتزا بيبروني من جو"</Text>
+                                    <Text className="text-gray-500 text-sm">جرب قول "أبي من البيك"</Text>
                                 </View>
                             </View>
 
                             <View className="flex-row flex-wrap justify-center gap-2">
                                 <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2 rounded-full flex-row items-center space-x-2">
-                                    <MaterialIcons name="history" size={16} color="#DC2626" />
-                                    <Text className="text-sm font-medium text-gray-700 ml-1">"كرر طلبي الأخير"</Text>
+                                    <MaterialIcons name="restaurant" size={16} color="#DC2626" />
+                                    <Text className="text-sm font-medium text-gray-700 ml-1">"أبي من البيك"</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2 rounded-full flex-row items-center space-x-2">
-                                    <MaterialIcons name="local-fire-department" size={16} color="#DC2626" />
-                                    <Text className="text-sm font-medium text-gray-700 ml-1">"ابحث عن برجر قريب مني"</Text>
+                                    <MaterialIcons name="lunch-dining" size={16} color="#DC2626" />
+                                    <Text className="text-sm font-medium text-gray-700 ml-1">"أبي من ماكدونالدز"</Text>
                                 </TouchableOpacity>
                             </View>
                         </>
                     ) : (
                         <>
+                            {/* Background Food Icons */}
+                            <View className="absolute top-10 right-8 opacity-[0.06] transform rotate-12">
+                                <MaterialIcons name="fastfood" size={52} color="#DC2626" />
+                            </View>
+                            <View className="absolute bottom-32 left-6 opacity-[0.06] transform -rotate-12">
+                                <MaterialIcons name="local-pizza" size={52} color="#DC2626" />
+                            </View>
+                            <View className="absolute top-1/4 left-8 opacity-[0.04] transform rotate-45">
+                                <MaterialIcons name="restaurant" size={68} color="#DC2626" />
+                            </View>
+                            <View className="absolute top-16 left-1/3 opacity-[0.05] transform -rotate-6">
+                                <MaterialIcons name="lunch-dining" size={44} color="#DC2626" />
+                            </View>
+                            <View className="absolute bottom-48 right-6 opacity-[0.05] transform rotate-20">
+                                <MaterialIcons name="local-cafe" size={40} color="#DC2626" />
+                            </View>
+
                             {/* Listening State */}
-                            <View className="flex-row items-end justify-center h-24 mb-10 space-x-2">
+                            <View className="flex-row items-end justify-center h-16 mb-4 space-x-2">
                                 {waveAnims.map((anim, i) => (
                                     <Animated.View
                                         key={i}
@@ -598,29 +778,95 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
                                 ))}
                             </View>
 
-                            <View className="mb-6 items-center">
-                                <Text className="text-2xl font-bold mb-2">{status === 'Listening...' ? 'جاري الاستماع...' : status}</Text>
-                                {['Listening...', 'Connecting...'].includes(status) && (
-                                    <View className="flex-row space-x-1">
-                                        <View className="w-2 h-2 bg-[#DC2626] rounded-full opacity-100" />
-                                        <View className="w-2 h-2 bg-[#DC2626] rounded-full opacity-60" />
-                                        <View className="w-2 h-2 bg-[#DC2626] rounded-full opacity-30" />
+                            <View className="mb-3 items-center">
+                                <Text className="text-lg font-bold mb-1">{status === 'Listening...' ? 'جاري الاستماع...' : status}</Text>
+                            </View>
+
+                            {/* Chat Messages */}
+                            <ScrollView
+                                ref={scrollViewRef}
+                                className="flex-1 w-full px-2 mb-4"
+                                onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {messages.map((msg, idx) => (
+                                    <View
+                                        key={idx}
+                                        style={{
+                                            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                            backgroundColor: msg.role === 'user' ? '#3B82F6' : '#FEE2E2',
+                                            borderRadius: 16,
+                                            borderTopRightRadius: msg.role === 'user' ? 4 : 16,
+                                            borderTopLeftRadius: msg.role === 'ai' ? 4 : 16,
+                                            paddingHorizontal: 14,
+                                            paddingVertical: 10,
+                                            marginBottom: 8,
+                                            maxWidth: '80%',
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: msg.role === 'user' ? '#FFFFFF' : '#991B1B',
+                                                fontSize: 15,
+                                                textAlign: 'right',
+                                                lineHeight: 22,
+                                            }}
+                                        >
+                                            {msg.text}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                color: msg.role === 'user' ? '#BFDBFE' : '#DC2626',
+                                                fontSize: 10,
+                                                textAlign: msg.role === 'user' ? 'left' : 'right',
+                                                marginTop: 4,
+                                            }}
+                                        >
+                                            {msg.role === 'user' ? 'أنت' : 'جاهز AI'}
+                                        </Text>
                                     </View>
-                                )}
-                            </View>
+                                ))}
 
-                            <View className="max-w-xs mx-auto mb-12">
-                                <Text className="text-xl text-gray-500 italic font-medium text-center">
-                                    {transcript || '"أريد برجر كنج..."'}
-                                </Text>
-                            </View>
+                                {/* Currently streaming AI text */}
+                                {currentAiText ? (
+                                    <View
+                                        style={{
+                                            alignSelf: 'flex-start',
+                                            backgroundColor: '#FEE2E2',
+                                            borderRadius: 16,
+                                            borderTopLeftRadius: 4,
+                                            paddingHorizontal: 14,
+                                            paddingVertical: 10,
+                                            marginBottom: 8,
+                                            maxWidth: '80%',
+                                            opacity: 0.7,
+                                        }}
+                                    >
+                                        <Text style={{ color: '#991B1B', fontSize: 15, textAlign: 'right', lineHeight: 22 }}>
+                                            {currentAiText}...
+                                        </Text>
+                                        <Text style={{ color: '#DC2626', fontSize: 10, textAlign: 'right', marginTop: 4 }}>
+                                            جاهز AI يتحدث...
+                                        </Text>
+                                    </View>
+                                ) : null}
+                            </ScrollView>
 
-                            <View className="bg-gray-50 rounded-2xl p-5 border border-red-100 w-full max-w-sm">
-                                <Text className="text-xs font-bold text-[#DC2626] mb-3 uppercase tracking-wider text-right">جرّب قول:</Text>
-                                <View className="flex-row flex-wrap gap-2 justify-end">
-                                    <Text className="bg-white px-4 py-2 rounded-full text-sm shadow-sm border border-gray-100">"مطاعم بيتزا قريبة"</Text>
-                                    <Text className="bg-white px-4 py-2 rounded-full text-sm shadow-sm border border-gray-100">"أعد طلب وجبتي الأخيرة"</Text>
-                                    <Text className="bg-white px-4 py-2 rounded-full text-sm shadow-sm border border-gray-100">"خيارات صحية"</Text>
+                            {/* Quick Suggestion Chips */}
+                            <View className="w-full px-2 pb-4">
+                                <View className="flex-row flex-wrap justify-center gap-2">
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">وش عندكم؟</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="check-circle" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">أكّد الطلب</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                        <MaterialIcons name="swap-horiz" size={16} color="#DC2626" />
+                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">غيّر المطعم</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         </>
