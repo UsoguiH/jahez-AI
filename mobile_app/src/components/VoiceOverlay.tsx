@@ -8,6 +8,7 @@ import { Buffer } from 'buffer';
 
 import { supabase } from '../lib/supabase';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import OrderCartWidget, { CartItem } from './OrderCartWidget';
 
 // Polyfill for global
 if (!global.btoa) { global.btoa = btoa; }
@@ -34,6 +35,8 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
     const [transcript, setTranscript] = useState('');
     const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
     const [currentAiText, setCurrentAiText] = useState('');
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [orderConfirmed, setOrderConfirmed] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
     const ws = useRef<WebSocket | null>(null);
     const recording = useRef<Audio.Recording | null>(null);
@@ -100,6 +103,8 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             }
             // Reset restaurant selection for next session
             selectedRestaurantRef.current = null;
+            setCartItems([]);
+            setOrderConfirmed(false);
         }
     }, [visible]);
 
@@ -258,17 +263,20 @@ ${menuText}
 **المهام:**
 1. ساعد المستخدم في اختيار أصناف من القائمة.
 2. لما يطلب صنف، أكّد الاسم والسعر بجملة وحدة.
-3. تتبّع الطلب (الأصناف، الكميات، المجموع) في ذاكرتك.
+3. **مهم جداً:** بعد كل إضافة أو تعديل أو حذف صنف، استخدم أداة update_cart فوراً وأرسل الطلب الكامل الحالي (جميع الأصناف مع الكميات والأسعار).
 4. لما يقول "أكد" أو "خلاص" أو "تمم" أو "بس كذا"، استخدم confirm_order واذكر ملخص الطلب والمجموع.
 5. لو يبي يغيّر المطعم، استخدم select_restaurant.
 6. لو سأل "وش عندكم" أو "قولي الأقسام"، اذكر أسماء الأقسام فقط: ${restaurant.menu_json.map((c: any) => c.category_ar).join('، ')}.
 7. لو سأل عن قسم معين، اذكر أصنافه وأسعاره.
+8. لو قال "شيل" أو "حذف" صنف، احذفه من الطلب واستخدم update_cart بالقائمة المحدّثة.
+9. لو قال "زيد" أو "ضيف واحد"، زيد الكمية واستخدم update_cart.
 
 **تعليمات مهمة:**
 - لا تذكر أي IDs.
 - ردودك قصيرة جداً — جملة أو جملتين فقط.
 - لا تقرأ القائمة كاملة إلا إذا طلب ذلك.
-- الأسعار بالريال السعودي.`;
+- الأسعار بالريال السعودي.
+- **لازم تستخدم update_cart بعد أي تغيير في الطلب — هذا يحدّث شاشة العميل.**`;
     };
 
     const connectToOpenAIDirectly = async (authToken: string) => {
@@ -288,6 +296,32 @@ ${menuText}
                         }
                     },
                     required: ["restaurant_name"]
+                }
+            },
+            {
+                type: "function",
+                name: "update_cart",
+                description: "Update the visual cart on the user's screen. Call this EVERY time the user adds, modifies, or removes an item. Send the FULL current cart (all items) each time, not just the change.",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        items: {
+                            type: "array",
+                            description: "The complete list of all items currently in the order",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name_ar: { type: "string", description: "Arabic name of the item" },
+                                    name_en: { type: "string", description: "English name of the item" },
+                                    quantity: { type: "number", description: "Quantity ordered" },
+                                    unit_price: { type: "number", description: "Price per unit in SAR" },
+                                    notes: { type: "string", description: "Optional customization notes, e.g. 'بدون مخلل' or 'إضافة جبنة'" }
+                                },
+                                required: ["name_ar", "name_en", "quantity", "unit_price"]
+                            }
+                        }
+                    },
+                    required: ["items"]
                 }
             },
             {
@@ -448,6 +482,8 @@ ${menuText}
 
                         if (name === 'select_restaurant') {
                             result = handleSelectRestaurant(args.restaurant_name, socket);
+                        } else if (name === 'update_cart') {
+                            result = handleUpdateCart(args);
                         } else if (name === 'confirm_order') {
                             result = handleConfirmOrder(args);
                         } else {
@@ -546,9 +582,23 @@ ${menuText}
         };
     };
 
-    // Handle confirm_order — just a confirmation for now (no DB write)
+    // Handle update_cart — updates the visual cart widget
+    const handleUpdateCart = (args: { items: CartItem[] }) => {
+        console.log(`[TOOL] update_cart: ${args.items.length} items`, args.items);
+        setCartItems(args.items || []);
+        const subtotal = (args.items || []).reduce((sum: number, item: CartItem) => sum + (item.unit_price * item.quantity), 0);
+        return {
+            success: true,
+            items_count: args.items.length,
+            subtotal: subtotal,
+            message: `تم تحديث السلة. ${args.items.length} صنف، المجموع الفرعي: ${subtotal} ريال`
+        };
+    };
+
+    // Handle confirm_order — confirms and shows success
     const handleConfirmOrder = (args: { order_summary: string; total_price: number }) => {
         console.log(`[TOOL] confirm_order:`, args);
+        setOrderConfirmed(true);
         return {
             success: true,
             order_id: `ORD-${Date.now()}`,
@@ -786,6 +836,7 @@ ${menuText}
                             <ScrollView
                                 ref={scrollViewRef}
                                 className="flex-1 w-full px-2 mb-4"
+                                contentContainerStyle={{ paddingBottom: cartItems.length > 0 ? 320 : 10 }}
                                 onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                                 showsVerticalScrollIndicator={false}
                             >
@@ -852,26 +903,56 @@ ${menuText}
                                 ) : null}
                             </ScrollView>
 
-                            {/* Quick Suggestion Chips */}
-                            <View className="w-full px-2 pb-2 mb-10">
-                                <View className="flex-row flex-wrap justify-center gap-2">
-                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                        <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
-                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">وش عندكم؟</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                        <MaterialIcons name="check-circle" size={16} color="#DC2626" />
-                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">أكّد الطلب</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
-                                        <MaterialIcons name="swap-horiz" size={16} color="#DC2626" />
-                                        <Text className="text-sm font-medium text-gray-700 ml-1.5">غيّر المطعم</Text>
-                                    </TouchableOpacity>
+                            {/* Quick Suggestion Chips — hide when cart is visible */}
+                            {cartItems.length === 0 && (
+                                <View className="w-full px-2 pb-2 mb-10">
+                                    <View className="flex-row flex-wrap justify-center gap-2">
+                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                            <MaterialIcons name="restaurant-menu" size={16} color="#DC2626" />
+                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">وش عندكم؟</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                            <MaterialIcons name="check-circle" size={16} color="#DC2626" />
+                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">أكّد الطلب</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity className="bg-gray-50 border border-red-100 px-4 py-2.5 rounded-full flex-row items-center">
+                                            <MaterialIcons name="swap-horiz" size={16} color="#DC2626" />
+                                            <Text className="text-sm font-medium text-gray-700 ml-1.5">غيّر المطعم</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                            </View>
+                            )}
                         </>
                     )}
                 </View>
+
+                {/* Order Cart Widget — slides up when items are added */}
+                {isListening && cartItems.length > 0 && (
+                    <OrderCartWidget
+                        items={cartItems}
+                        restaurantName={selectedRestaurantRef.current?.name_ar}
+                        onConfirm={() => {
+                            // Trigger confirm via voice — tell AI to confirm
+                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                                ws.current.send(JSON.stringify({
+                                    type: 'conversation.item.create',
+                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أكد الطلب' }] }
+                                }));
+                                ws.current.send(JSON.stringify({ type: 'response.create' }));
+                            }
+                        }}
+                        onEdit={() => {
+                            // Trigger edit via voice
+                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                                ws.current.send(JSON.stringify({
+                                    type: 'conversation.item.create',
+                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أبي أعدّل الطلب' }] }
+                                }));
+                                ws.current.send(JSON.stringify({ type: 'response.create' }));
+                            }
+                        }}
+                    />
+                )}
             </View>
         </Modal>
     );
