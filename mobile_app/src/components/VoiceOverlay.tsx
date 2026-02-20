@@ -9,6 +9,7 @@ import { Buffer } from 'buffer';
 import { supabase } from '../lib/supabase';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import OrderCartWidget, { CartItem } from './OrderCartWidget';
+import InlineCartWidget from './InlineCartWidget';
 import OrderConfirmation from './OrderConfirmation';
 
 // Polyfill for global
@@ -38,7 +39,9 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
     const [currentAiText, setCurrentAiText] = useState('');
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [orderConfirmed, setOrderConfirmed] = useState(false);
+    const [isAiSpeaking, setIsAiSpeaking] = useState(false);
     const [orderDetails, setOrderDetails] = useState<{ summary: string; total: number } | null>(null);
+    const [showFullCart, setShowFullCart] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
     const ws = useRef<WebSocket | null>(null);
     const recording = useRef<Audio.Recording | null>(null);
@@ -108,6 +111,7 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
             setCartItems([]);
             setOrderConfirmed(false);
             setOrderDetails(null);
+            setShowFullCart(false);
         }
     }, [visible]);
 
@@ -436,12 +440,10 @@ ${menuText}
                     }
 
                     if (msg.type === 'response.created') {
-                        // AI is generating — mute mic
+                        // AI is generating — mute mic during playback to prevent echo
                         isSpeaking.current = true;
+                        setIsAiSpeaking(true);
                         audioBuffer.current = '';
-                        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                            ws.current.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
-                        }
                     }
 
                     if (msg.type === 'response.audio.delta' && msg.delta) {
@@ -454,6 +456,10 @@ ${menuText}
                             await playAudioChunk(audioBuffer.current);
                             audioBuffer.current = '';
                         }
+                    }
+
+                    if (msg.type === 'response.done') {
+                        // Response fully complete (audio may still be playing locally)
                     }
 
                     if (msg.type === 'response.audio_transcript.delta' && msg.delta) {
@@ -638,6 +644,7 @@ ${menuText}
                     if (currentSound.current === newSound) currentSound.current = null;
                     console.log('Playback finished — resuming mic input');
                     isSpeaking.current = false;
+                    setIsAiSpeaking(false);
                 }
             });
         } catch (error) { console.error('Play error', error); }
@@ -666,6 +673,7 @@ ${menuText}
             LiveAudioStream.init(options);
 
             LiveAudioStream.on('data', (data) => {
+                // Mute mic while AI audio is playing to prevent echo feedback loop
                 if (isSpeaking.current) return;
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
                     ws.current.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: data }));
@@ -698,6 +706,22 @@ ${menuText}
     };
 
     const handleMicPress = async () => {
+        // Tap-to-interrupt: if AI is speaking, stop playback and resume listening
+        if (isSpeaking.current) {
+            console.log('[TAP-INTERRUPT] User tapped mic — stopping AI playback');
+            audioBuffer.current = '';
+            if (currentSound.current) {
+                try {
+                    await currentSound.current.stopAsync();
+                    await currentSound.current.unloadAsync();
+                } catch (e) { /* ignore */ }
+                currentSound.current = null;
+            }
+            isSpeaking.current = false;
+            setIsAiSpeaking(false);
+            return;
+        }
+
         if (isListening) {
             stopRecording();
         } else {
@@ -753,6 +777,7 @@ ${menuText}
                             setOrderConfirmed(false);
                             setOrderDetails(null);
                             setCartItems([]);
+                            setShowFullCart(false);
                             handleCloseOverlay();
                         }}
                     />
@@ -836,26 +861,40 @@ ${menuText}
                                 <MaterialIcons name="local-cafe" size={40} color="#DC2626" />
                             </View>
 
-                            {/* Listening State */}
-                            <View className="flex-row items-end justify-center h-16 mb-4 space-x-2">
-                                {waveAnims.map((anim, i) => (
-                                    <Animated.View
-                                        key={i}
-                                        style={{ height: anim }}
-                                        className="w-3 bg-[#DC2626] rounded-full mx-1"
-                                    />
-                                ))}
-                            </View>
+                            {/* Listening State — tap to interrupt AI */}
+                            <TouchableOpacity
+                                onPress={handleMicPress}
+                                activeOpacity={0.7}
+                                style={{
+                                    alignItems: 'center',
+                                    paddingVertical: 8,
+                                }}
+                            >
+                                <View className="flex-row items-end justify-center h-16 mb-4 space-x-2">
+                                    {waveAnims.map((anim, i) => (
+                                        <Animated.View
+                                            key={i}
+                                            style={{ height: anim }}
+                                            className="w-3 bg-[#DC2626] rounded-full mx-1"
+                                        />
+                                    ))}
+                                </View>
 
-                            <View className="mb-3 items-center">
-                                <Text className="text-lg font-bold mb-1">{status === 'Listening...' ? 'جاري الاستماع...' : status}</Text>
-                            </View>
+                                <View className="mb-3 items-center">
+                                    <Text className="text-lg font-bold mb-1">{status === 'Listening...' ? 'جاري الاستماع...' : status}</Text>
+                                    {isAiSpeaking && (
+                                        <Text style={{ fontSize: 13, color: '#DC2626', fontWeight: '700', marginTop: 4 }}>
+                                            اضغط لإيقاف AI 🛑
+                                        </Text>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
 
                             {/* Chat Messages */}
                             <ScrollView
                                 ref={scrollViewRef}
                                 className="flex-1 w-full px-2 mb-4"
-                                contentContainerStyle={{ paddingBottom: cartItems.length > 0 ? 320 : 10 }}
+                                contentContainerStyle={{ paddingBottom: cartItems.length > 0 ? (showFullCart ? 380 : 20) : 10 }}
                                 onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
                                 showsVerticalScrollIndicator={false}
                             >
@@ -920,6 +959,15 @@ ${menuText}
                                         </Text>
                                     </View>
                                 ) : null}
+
+                                {/* Inline Cart Widget in Chat */}
+                                {cartItems.length > 0 && !showFullCart && (
+                                    <InlineCartWidget
+                                        items={cartItems}
+                                        onItemsChange={(newItems) => setCartItems(newItems)}
+                                        onShowCart={() => setShowFullCart(true)}
+                                    />
+                                )}
                             </ScrollView>
 
                             {/* Quick Suggestion Chips — hide when cart is visible */}
@@ -946,10 +994,11 @@ ${menuText}
                 </View>
 
                 {/* Order Cart Widget — slides up when items are added */}
-                {isListening && cartItems.length > 0 && (
+                {isListening && cartItems.length > 0 && showFullCart && (
                     <OrderCartWidget
                         items={cartItems}
                         restaurantName={selectedRestaurantRef.current?.name_ar}
+                        onItemsChange={(newItems) => setCartItems(newItems)}
                         onConfirm={() => {
                             // Trigger confirm via voice — tell AI to confirm
                             if (ws.current && ws.current.readyState === WebSocket.OPEN) {
