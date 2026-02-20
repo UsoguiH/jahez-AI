@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, SafeAreaView, ScrollView, Image, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, SafeAreaView, ScrollView, Image, Animated, Platform, Alert } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode as atob, encode as btoa } from 'base-64';
@@ -173,9 +173,8 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
         }
     }, [isListening]);
 
-    // Build the initial AI instructions (no menu loaded yet)
+    // Build the initial AI instructions (mood-based, no listing all restaurants)
     const getInitialInstructions = () => {
-        const restaurantNames = restaurantsRef.current.map(r => r.name_ar).join('، ');
         return `أنت مساعد ذكي ودود اسمك "جاهز AI" تعمل في تطبيق جاهز لتوصيل الطعام في السعودية.
 تتحدث بالعربية بلهجة سعودية نجدية ودية وطبيعية.
 
@@ -202,28 +201,32 @@ const VoiceOverlay = ({ userId, visible, onClose }: VoiceOverlayProps) => {
 - "أكوم" = صوص الثوم من البيك (ACOM garlic sauce)
 
 **أمثلة على طلبات المستخدم:**
-- "أبي من البيك" = يريد الطلب من مطعم البيك
-- "عطني اثنين بروست" = أضف وجبة بروست قطعتين
-- "أبي روبيان" = أضف وجبة روبيان
-- "أبي بيج ماك" = أضف بيج ماك
-- "وش عندكم" = اعرض أقسام القائمة
-- "بس كذا أكد" = أكد الطلب
+- "أبي من البيك" = يريد الطلب من مطعم البيك → استخدم select_restaurant فوراً
+- "أبي برقر" = يشتهي برقر → اقترح ماكدونالدز أو هرفي
+- "أبي شاورما" = يشتهي شاورما → اقترح شاورمر أو ماما نورة
+- "أبي دجاج" = يشتهي دجاج → اقترح البيك أو كنتاكي أو الطازج
+- "أبي بيتزا" = يشتهي بيتزا → اقترح بيتزا هت
+- "أبي قهوة" = يشتهي قهوة → اقترح ستاربكس
+- "أبي حلا" أو "آيس كريم" = يشتهي حلا → اقترح باسكن روبنز
+- "أبي ساندوتش" = يشتهي ساندوتش → اقترح كودو أو صب واي
+- "أبي كبسة" أو "أكل سعودي" = يشتهي أكل تقليدي → اقترح الرومانسية
 
 **الحالة الحالية:**
 - لم يتم اختيار مطعم بعد.
-- المطاعم المتاحة: ${restaurantNames || 'البيك، الرومانسية، ماكدونالدز'}
 - User ID = '${userId || 'guest-user-123'}'.
 
 **المهام:**
-1. عند أول اتصال، رحّب بالمستخدم ترحيب حار وقصير واسأله من أي مطعم يبي يطلب. اذكر أسماء المطاعم.
-2. لما المستخدم يقول اسم مطعم، استخدم أداة select_restaurant فوراً.
-3. بعد ما يتم تحميل القائمة، ساعد المستخدم في الطلب.
-4. لا تحاول تعرض قائمة طعام قبل استخدام select_restaurant.
+1. عند أول اتصال، رحّب بالمستخدم ترحيب حار وقصير واسأله "وش تشتهي اليوم؟" واذكر الأنواع: برقر، دجاج، شاورما، بيتزا، أو قهوة. لا تذكر أسماء المطاعم كلها.
+2. لما المستخدم يقول نوع أكل (مثل "برقر" أو "دجاج")، اقترح ٢-٣ مطاعم مناسبة واسأله يختار.
+3. لما المستخدم يقول اسم مطعم مباشرة، استخدم أداة select_restaurant فوراً بدون ما تسأل عن النوع.
+4. بعد ما يتم تحميل القائمة، ساعد المستخدم في الطلب.
+5. لا تحاول تعرض قائمة طعام قبل استخدام select_restaurant.
 
 **تعليمات مهمة:**
 - لا تذكر أي IDs أو معلومات تقنية.
 - الأسعار بالريال السعودي.
-- ردودك قصيرة جداً — جملة أو جملتين فقط.`;
+- ردودك قصيرة جداً — جملة أو جملتين فقط.
+- لا تسرد جميع المطاعم أبداً. فقط اقترح ٢-٣ مطاعم حسب ما يشتهيه المستخدم.`;
     };
 
     // Build updated instructions after restaurant selection (with full menu)
@@ -299,7 +302,7 @@ ${menuText}
                     properties: {
                         restaurant_name: {
                             type: "string",
-                            description: "The name of the restaurant the user wants (e.g., 'البيك', 'الرومانسية', 'ماكدونالدز', 'Al Baik', 'McDonald\\'s')"
+                            description: "The name of the restaurant the user wants (e.g., 'البيك', 'الرومانسية', 'ماكدونالدز', 'شاورمر', 'كودو', 'هرفي', 'بيتزا هت', 'ماما نورة', 'الطازج', 'باسكن روبنز', 'كنتاكي', 'صب واي', 'ستاربكس')"
                         }
                     },
                     required: ["restaurant_name"]
@@ -414,15 +417,14 @@ ${menuText}
                 };
                 socket.send(JSON.stringify(sessionUpdate));
 
-                // Trigger initial greeting — AI will ask which restaurant
+                // Trigger initial greeting — mood-based, ask what cuisine they want
                 setTimeout(() => {
                     console.log('Requesting AI greeting...');
-                    const restaurantNames = restaurantsRef.current.map(r => r.name_ar).join(' و');
                     socket.send(JSON.stringify({
                         type: 'response.create',
                         response: {
                             modalities: ['text', 'audio'],
-                            instructions: `رحّب بالمستخدم ترحيب حار وقصير وعرّف عن نفسك إنك "جاهز AI" واسأله من أي مطعم يبي يطلب. اذكر المطاعم المتاحة: ${restaurantNames || 'البيك والرومانسية وماكدونالدز'}. جملتين فقط لا تطوّل.`
+                            instructions: `رحّب بالمستخدم ترحيب حار وقصير وعرّف عن نفسك إنك "جاهز AI" واسأله وش يشتهي اليوم — برقر، دجاج، شاورما، بيتزا، أو قهوة؟ جملتين فقط لا تطوّل. لا تذكر أسماء مطاعم.`
                         }
                     }));
                 }, 500);
@@ -535,25 +537,45 @@ ${menuText}
     const handleSelectRestaurant = (restaurantName: string, socket: WebSocket) => {
         console.log(`[TOOL] select_restaurant: "${restaurantName}"`);
 
-        // Fuzzy match restaurant name
+        // Fuzzy match restaurant name — generic matching for all restaurants
         const normalizedInput = restaurantName.toLowerCase().trim();
+
+        // Common Arabic shorthand → full name mappings
+        const shortcuts: Record<string, string> = {
+            'ماك': 'ماكدونالدز',
+            'بيك': 'البيك',
+            'رومانسي': 'الرومانسية',
+            'شاورم': 'شاورمر',
+            'ماما': 'ماما نورة',
+            'طازج': 'الطازج',
+            'باسكن': 'باسكن روبنز',
+            'صبواي': 'صب واي',
+            'صب وي': 'صب واي',
+            'ستاربك': 'ستاربكس',
+            'كنتاك': 'كنتاكي',
+            'بيتزا': 'بيتزا هت',
+        };
+
+        // Check if input matches any shortcut first
+        let expandedInput = normalizedInput;
+        for (const [shortcut, fullName] of Object.entries(shortcuts)) {
+            if (normalizedInput.includes(shortcut)) {
+                expandedInput = fullName;
+                break;
+            }
+        }
+
         const restaurant = restaurantsRef.current.find(r => {
             const nameAr = r.name_ar.toLowerCase();
             const nameEn = r.name_en.toLowerCase();
             const id = r.id.toLowerCase();
-            return nameAr.includes(normalizedInput) ||
-                normalizedInput.includes(nameAr) ||
-                nameEn.includes(normalizedInput) ||
-                normalizedInput.includes(nameEn) ||
+            return nameAr.includes(expandedInput) ||
+                expandedInput.includes(nameAr) ||
+                nameEn.includes(expandedInput) ||
+                expandedInput.includes(nameEn) ||
                 id.includes(normalizedInput) ||
-                // Common partial matches
-                (normalizedInput.includes('بيك') && nameAr.includes('البيك')) ||
-                (normalizedInput.includes('baik') && nameEn.toLowerCase().includes('baik')) ||
-                (normalizedInput.includes('رومانسي') && nameAr.includes('الرومانسية')) ||
-                (normalizedInput.includes('romansiah') && nameEn.toLowerCase().includes('romansiah')) ||
-                (normalizedInput.includes('ماكدونالدز') && nameAr.includes('ماكدونالدز')) ||
-                (normalizedInput.includes('ماك') && nameAr.includes('ماكدونالدز')) ||
-                (normalizedInput.includes('mcdonald') && nameEn.toLowerCase().includes('mcdonald'));
+                nameAr.includes(normalizedInput) ||
+                normalizedInput.includes(nameAr);
         });
 
         if (!restaurant) {
@@ -1000,14 +1022,31 @@ ${menuText}
                         restaurantName={selectedRestaurantRef.current?.name_ar}
                         onItemsChange={(newItems) => setCartItems(newItems)}
                         onConfirm={() => {
-                            // Trigger confirm via voice — tell AI to confirm
-                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                                ws.current.send(JSON.stringify({
-                                    type: 'conversation.item.create',
-                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أكد الطلب' }] }
-                                }));
-                                ws.current.send(JSON.stringify({ type: 'response.create' }));
-                            }
+                            // Show confirmation alert and tell AI to confirm
+                            const subtotal = cartItems.reduce((sum, i) => sum + (i.unit_price * i.quantity), 0);
+                            const total = (subtotal * 1.15).toFixed(2);
+                            const itemsSummary = cartItems.map(i => `${i.name_ar} × ${i.quantity}`).join('، ');
+
+                            Alert.alert(
+                                'تأكيد الطلب ✅',
+                                `${itemsSummary}\n\nالمجموع: ${total} ر.س`,
+                                [
+                                    { text: 'إلغاء', style: 'cancel' },
+                                    {
+                                        text: 'تأكيد',
+                                        onPress: () => {
+                                            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                                                ws.current.send(JSON.stringify({
+                                                    type: 'conversation.item.create',
+                                                    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'أكد الطلب' }] }
+                                                }));
+                                                ws.current.send(JSON.stringify({ type: 'response.create' }));
+                                            }
+                                            setShowFullCart(false);
+                                        },
+                                    },
+                                ]
+                            );
                         }}
                         onEdit={() => {
                             // Trigger edit via voice

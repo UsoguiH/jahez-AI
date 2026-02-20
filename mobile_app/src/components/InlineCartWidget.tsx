@@ -86,7 +86,7 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                 transform: [{ translateY: slideAnim }],
                 alignSelf: 'flex-start',
                 width: '88%',
-                marginBottom: 8,
+                marginBottom: 30,
             }}
         >
             <View style={{
