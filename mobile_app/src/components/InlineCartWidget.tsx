@@ -91,18 +91,18 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
         >
             <View style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 22,
-                padding: 12,
+                borderRadius: 28,
+                padding: 20,
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.08,
-                shadowRadius: 16,
-                elevation: 6,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 10,
                 borderWidth: 0.5,
                 borderColor: 'rgba(255,255,255,0.9)',
             }}>
                 {/* Items */}
-                <ScrollView style={{ maxHeight: 140 }} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+                <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
                     <View style={{ gap: 0 }}>
                         {items.map((item, idx) => (
                             <View key={`${item.name_en}-${idx}`}>
@@ -110,46 +110,46 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                                     flexDirection: 'row',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    paddingVertical: 7,
+                                    paddingVertical: 10,
                                 }}>
                                     {/* Stepper Pill (left in RTL) */}
                                     <View style={{
                                         backgroundColor: '#F2F2F7',
-                                        borderRadius: 16,
+                                        borderRadius: 20,
                                         flexDirection: 'row',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        padding: 2,
-                                        width: 76,
+                                        padding: 3,
+                                        width: 90,
                                     }}>
                                         {/* Plus */}
                                         <TouchableOpacity
                                             onPress={() => handleIncrement(idx)}
                                             style={{
-                                                width: 22,
-                                                height: 22,
+                                                width: 26,
+                                                height: 26,
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                             }}
                                         >
-                                            <Ionicons name="add" size={13} color="#1D1D1F" />
+                                            <Ionicons name="add" size={15} color="#1D1D1F" />
                                         </TouchableOpacity>
 
                                         {/* Qty Badge */}
                                         <View style={{
-                                            width: 20,
-                                            height: 20,
-                                            borderRadius: 10,
+                                            width: 24,
+                                            height: 24,
+                                            borderRadius: 12,
                                             backgroundColor: '#E31837',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             shadowColor: '#E31837',
-                                            shadowOffset: { width: 0, height: 2 },
-                                            shadowOpacity: 0.3,
-                                            shadowRadius: 4,
-                                            elevation: 3,
+                                            shadowOffset: { width: 0, height: 3 },
+                                            shadowOpacity: 0.35,
+                                            shadowRadius: 6,
+                                            elevation: 4,
                                         }}>
-                                            <Text style={{ color: 'white', fontSize: 10, fontWeight: '700' }}>
+                                            <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>
                                                 {item.quantity}
                                             </Text>
                                         </View>
@@ -158,39 +158,39 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                                         <TouchableOpacity
                                             onPress={() => handleDecrement(idx)}
                                             style={{
-                                                width: 22,
-                                                height: 22,
+                                                width: 26,
+                                                height: 26,
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                             }}
                                         >
                                             {item.quantity <= 1 ? (
-                                                <Ionicons name="trash-outline" size={12} color="#1D1D1F" />
+                                                <Ionicons name="trash-outline" size={14} color="#1D1D1F" />
                                             ) : (
-                                                <Ionicons name="remove" size={13} color="#1D1D1F" />
+                                                <Ionicons name="remove" size={15} color="#1D1D1F" />
                                             )}
                                         </TouchableOpacity>
                                     </View>
 
                                     {/* Name + Price (right in RTL) */}
-                                    <View style={{ flex: 1, alignItems: 'flex-end', marginLeft: 10 }}>
-                                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#1D1D1F', textAlign: 'right' }} numberOfLines={1}>
+                                    <View style={{ flex: 1, alignItems: 'flex-end', marginLeft: 12 }}>
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#1D1D1F', textAlign: 'right' }}>
                                             {item.name_ar}
                                         </Text>
                                         {item.notes ? (
                                             <Text style={{
-                                                fontSize: 10,
+                                                fontSize: 12,
                                                 fontWeight: '600',
                                                 color: item.notes.includes('بدون') ? '#FF3B30' : '#34C759',
                                                 textAlign: 'right',
-                                                marginTop: 1,
+                                                marginTop: 2,
                                             }}>
                                                 {item.notes}
                                             </Text>
                                         ) : null}
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 }}>
-                                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#1D1D1F' }}>﷼</Text>
-                                            <Text style={{ fontSize: 12, fontWeight: '800', color: '#1D1D1F' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>
+                                            <Text style={{ fontSize: 14, fontWeight: '800', color: '#1D1D1F' }}>﷼</Text>
+                                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#1D1D1F' }}>
                                                 {(item.unit_price * item.quantity).toFixed(2)}
                                             </Text>
                                         </View>
@@ -200,10 +200,10 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                                     <Image
                                         source={{ uri: getFoodImage(item.name_en) }}
                                         style={{
-                                            width: 44,
-                                            height: 44,
-                                            borderRadius: 11,
-                                            marginLeft: 8,
+                                            width: 52,
+                                            height: 52,
+                                            borderRadius: 14,
+                                            marginLeft: 10,
                                         }}
                                         resizeMode="cover"
                                     />
@@ -219,14 +219,14 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                 </ScrollView>
 
                 {/* Divider before total */}
-                <View style={{ height: 0.5, backgroundColor: '#E5E5EA', marginTop: 4, marginBottom: 8 }} />
+                <View style={{ height: 0.5, backgroundColor: '#E5E5EA', marginTop: 8, marginBottom: 12 }} />
 
                 {/* Total */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 15, fontWeight: '800', color: '#D71920' }}>
+                    <Text style={{ fontSize: 19, fontWeight: '800', color: '#D71920' }}>
                         {total.toFixed(2)} ر.س
                     </Text>
-                    <Text style={{ fontSize: 15, fontWeight: '800', color: '#1D1D1F', textAlign: 'right' }}>
+                    <Text style={{ fontSize: 19, fontWeight: '800', color: '#1D1D1F', textAlign: 'right' }}>
                         المجموع الكلي
                     </Text>
                 </View>
@@ -237,18 +237,18 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                     activeOpacity={0.85}
                     style={{
                         backgroundColor: '#FF3B30',
-                        paddingVertical: 11,
-                        borderRadius: 14,
+                        paddingVertical: 16,
+                        borderRadius: 16,
                         alignItems: 'center',
-                        marginTop: 10,
+                        marginTop: 16,
                         shadowColor: '#FF3B30',
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 6,
-                        elevation: 5,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 8,
                     }}
                 >
-                    <Text style={{ color: 'white', fontSize: 15, fontWeight: '800' }}>عرض الطلب</Text>
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '800' }}>عرض الطلب</Text>
                 </TouchableOpacity>
             </View>
         </Animated.View>
