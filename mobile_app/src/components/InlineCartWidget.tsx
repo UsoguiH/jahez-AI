@@ -2,9 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CartItem } from './OrderCartWidget';
+import { getRestaurantLogo } from '../lib/restaurantLogos';
 
 interface InlineCartWidgetProps {
     items: CartItem[];
+    restaurantName?: string;
     onShowCart: () => void;
     onItemsChange?: (items: CartItem[]) => void;
 }
@@ -36,7 +38,7 @@ const getFoodImage = (nameEn: string): string => {
     return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop';
 };
 
-const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, onItemsChange }) => {
+const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, restaurantName, onShowCart, onItemsChange }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(15)).current;
 
@@ -95,7 +97,6 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                 padding: 20,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.1,
                 shadowRadius: 24,
                 elevation: 10,
                 borderWidth: 0.5,
@@ -196,7 +197,6 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                                         </View>
                                     </View>
 
-                                    {/* Food Image */}
                                     <Image
                                         source={{ uri: getFoodImage(item.name_en) }}
                                         style={{
@@ -204,6 +204,7 @@ const InlineCartWidget: React.FC<InlineCartWidgetProps> = ({ items, onShowCart, 
                                             height: 52,
                                             borderRadius: 14,
                                             marginLeft: 10,
+                                            backgroundColor: '#fff',
                                         }}
                                         resizeMode="cover"
                                     />

@@ -1,8 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ActivityIndicator, I18nManager } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, I18nManager, Platform } from 'react-native';
 
 // Enable RTL
 I18nManager.allowRTL(true);
+import './global.css'; // Important for Tailwind on Web
+if (Platform.OS === 'web') {
+  require('./web-build.css');
+}
 import HomeScreen from './src/screens/HomeScreen';
 import { useEffect, useState } from 'react';
 import { supabase } from './src/lib/supabase';
@@ -34,6 +38,34 @@ export default function App() {
       setUser(session?.user ?? null);
       if (session) setLoading(false);
     });
+
+    if (Platform.OS === 'web') {
+      // Small polyfill to ensure icons load smoothly on some web setups
+      const iconFontStyles = `@font-face {
+        src: url(${require('react-native-vector-icons/Fonts/Ionicons.ttf')});
+        font-family: Ionicons;
+      }
+      @font-face {
+        src: url(${require('react-native-vector-icons/Fonts/MaterialIcons.ttf')});
+        font-family: MaterialIcons;
+      }
+      @font-face {
+        src: url(${require('react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf')});
+        font-family: FontAwesome5_Regular;
+      }
+      @font-face {
+        src: url(${require('react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf')});
+        font-family: FontAwesome5_Solid;
+      }`;
+      const style = document.createElement('style');
+      style.type = 'text/css';
+      if (style.styleSheet) {
+        style.styleSheet.cssText = iconFontStyles;
+      } else {
+        style.appendChild(document.createTextNode(iconFontStyles));
+      }
+      document.head.appendChild(style);
+    }
   }, []);
 
   const signInAnon = async () => {
@@ -58,7 +90,7 @@ export default function App() {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator size="large" color="#E8610A" /></View>;
   }
 
-  return (
+  const AppContent = (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home">
@@ -69,6 +101,18 @@ export default function App() {
       <StatusBar style="auto" />
     </NavigationContainer>
   );
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.webContainer}>
+        <View style={styles.mobileWrapper}>
+          {AppContent}
+        </View>
+      </View>
+    );
+  }
+
+  return AppContent;
 }
 
 const styles = StyleSheet.create({
@@ -76,5 +120,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  webContainer: {
+    flex: 1,
+    backgroundColor: '#f3f4f6', // gray-100
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileWrapper: {
+    width: 400,
+    height: 850,
+    maxHeight: '100vh',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+    borderRadius: Platform.OS === 'web' ? 40 : 0, // Rounded corners on web only
+    borderWidth: Platform.OS === 'web' ? 8 : 0,
+    borderColor: '#1f2937', // Dark border like a phone bezel
+  }
 });
 

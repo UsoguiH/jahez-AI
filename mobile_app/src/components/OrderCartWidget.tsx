@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, ScrollView, Image } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { getRestaurantLogo } from '../lib/restaurantLogos';
 
 export interface CartItem {
     name_ar: string;
@@ -128,6 +129,13 @@ const OrderCartWidget: React.FC<OrderCartWidgetProps> = ({ items, restaurantName
                         <Text style={{ fontSize: 16, fontWeight: '800', color: '#1D1D1F' }}>
                             {restaurantName || 'طلبك'}
                         </Text>
+                        {restaurantName && getRestaurantLogo(restaurantName) ? (
+                            <Image
+                                source={getRestaurantLogo(restaurantName)}
+                                style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#E5E5EA', backgroundColor: '#fff' }}
+                                resizeMode="contain"
+                            />
+                        ) : null}
                         <View style={{
                             backgroundColor: '#E31837',
                             borderRadius: 10,

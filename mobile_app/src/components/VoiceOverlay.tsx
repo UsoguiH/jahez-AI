@@ -11,6 +11,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import OrderCartWidget, { CartItem } from './OrderCartWidget';
 import InlineCartWidget from './InlineCartWidget';
 import OrderConfirmation from './OrderConfirmation';
+import { getRestaurantLogo } from '../lib/restaurantLogos';
 
 // Polyfill for global
 if (!global.btoa) { global.btoa = btoa; }
@@ -812,7 +813,15 @@ ${menuText}
                             <Ionicons name="close" size={24} color="black" />
                         </TouchableOpacity>
                         <Text className="text-[#DC2626] font-bold text-lg">{isListening ? 'البحث الصوتي' : 'الطلب الصوتي'}</Text>
-                        <View className="w-10" />
+                        <View className="w-10 h-10 items-center justify-center">
+                            {selectedRestaurantRef.current && getRestaurantLogo(selectedRestaurantRef.current.name_ar) ? (
+                                <Image
+                                    source={getRestaurantLogo(selectedRestaurantRef.current.name_ar)}
+                                    style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E5E5EA', backgroundColor: '#fff' }}
+                                    resizeMode="contain"
+                                />
+                            ) : null}
+                        </View>
                     </View>
                 </SafeAreaView>
 
@@ -935,6 +944,15 @@ ${menuText}
                                             maxWidth: '80%',
                                         }}
                                     >
+                                        {(msg.role === 'ai' && selectedRestaurantRef.current && getRestaurantLogo(selectedRestaurantRef.current.name_ar)) ? (
+                                            <View style={{ position: 'absolute', top: -14, right: -10 }}>
+                                                <Image
+                                                    source={getRestaurantLogo(selectedRestaurantRef.current.name_ar)}
+                                                    style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: '#fff' }}
+                                                    resizeMode="contain"
+                                                />
+                                            </View>
+                                        ) : null}
                                         <Text
                                             style={{
                                                 color: msg.role === 'user' ? '#FFFFFF' : '#991B1B',
@@ -973,6 +991,15 @@ ${menuText}
                                             opacity: 0.7,
                                         }}
                                     >
+                                        {selectedRestaurantRef.current && getRestaurantLogo(selectedRestaurantRef.current.name_ar) ? (
+                                            <View style={{ position: 'absolute', top: -14, right: -10 }}>
+                                                <Image
+                                                    source={getRestaurantLogo(selectedRestaurantRef.current.name_ar)}
+                                                    style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: '#fff' }}
+                                                    resizeMode="contain"
+                                                />
+                                            </View>
+                                        ) : null}
                                         <Text style={{ color: '#991B1B', fontSize: 15, textAlign: 'right', lineHeight: 22 }}>
                                             {currentAiText}...
                                         </Text>
@@ -986,6 +1013,7 @@ ${menuText}
                                 {cartItems.length > 0 && !showFullCart && (
                                     <InlineCartWidget
                                         items={cartItems}
+                                        restaurantName={selectedRestaurantRef.current?.name_ar}
                                         onItemsChange={(newItems) => setCartItems(newItems)}
                                         onShowCart={() => setShowFullCart(true)}
                                     />
